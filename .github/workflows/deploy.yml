@@ -154,6 +154,8 @@ jobs:
 
       - name: Import image into k3s
         run: |
+          # Cache sudo credentials
+          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S true 2>/dev/null
           # Save & import into k3s containerd
           docker save ${image}:latest | sudo k3s ctr images import -
 
@@ -163,6 +165,9 @@ jobs:
           NAMESPACE="rplus"
 
           echo "=== Deploying ${DEPLOYMENT} ==="
+
+          # Cache sudo credentials for this step
+          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S true 2>/dev/null
 
           # Update deployment image
           sudo k3s kubectl set image deployment/${DEPLOYMENT} \
@@ -174,3 +179,4 @@ jobs:
           echo "Note: Deployment ${DEPLOYMENT} not found in k3s yet (apply manifests first)"
 
           echo "=== ${DEPLOYMENT} done ==="
+
