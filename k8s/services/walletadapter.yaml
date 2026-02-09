@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: walletadapter
-          image: rplus-walletadapter:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-walletadapter:latest
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: vault-config

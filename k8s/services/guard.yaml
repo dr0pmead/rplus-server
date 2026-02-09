@@ -21,8 +21,8 @@ spec:
     spec:
       containers:
         - name: guard
-          image: rplus-guard:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-guard:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5013
               name: grpc

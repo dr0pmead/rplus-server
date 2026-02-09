@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: runtime
-          image: rplus-runtime:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-runtime:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5020
               name: http

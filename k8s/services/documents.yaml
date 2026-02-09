@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: documents
-          image: rplus-documents:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-documents:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5017
               name: http

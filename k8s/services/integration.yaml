@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: integration
-          image: rplus-integration:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-integration:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5008
               name: http

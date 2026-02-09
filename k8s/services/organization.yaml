@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: organization
-          image: rplus-organization:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-organization:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5009
               name: http

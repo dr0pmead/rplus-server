@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: hunter
-          image: rplus-hunter:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-hunter:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5040
               name: http

@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: loyalty
-          image: rplus-loyalty:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-loyalty:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5012
               name: http

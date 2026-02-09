@@ -21,8 +21,8 @@ spec:
     spec:
       containers:
         - name: users
-          image: rplus-users:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-users:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5014
               name: http

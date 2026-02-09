@@ -21,8 +21,8 @@ spec:
     spec:
       containers:
         - name: auth
-          image: rplus-auth:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-auth:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5006
               name: http

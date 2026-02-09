@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: wallet
-          image: rplus-wallet:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-wallet:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5005
               name: http

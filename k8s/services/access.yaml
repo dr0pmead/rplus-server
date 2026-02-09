@@ -21,8 +21,8 @@ spec:
     spec:
       containers:
         - name: access
-          image: rplus-access:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-access:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5002
               name: http

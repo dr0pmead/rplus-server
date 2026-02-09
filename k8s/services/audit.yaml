@@ -21,8 +21,8 @@ spec:
     spec:
       containers:
         - name: audit
-          image: rplus-audit:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-audit:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5010
               name: grpc

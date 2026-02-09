@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: hr
-          image: rplus-hr:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-hr:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5016
               name: http

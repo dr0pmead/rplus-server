@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
         - name: meta
-          image: rplus-meta:latest
-          imagePullPolicy: Never
+          image: localhost:5000/rplus-meta:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5018
               name: http
