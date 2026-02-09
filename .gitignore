@@ -15,6 +15,10 @@ publish/
 *.nupkg
 *.snupkg
 
+# ─── BUT keep LocalPackages (needed for Docker builds) ────────────────────────
+!LocalPackages/
+!LocalPackages/*.nupkg
+
 # ─── IDE ──────────────────────────────────────────────────────────────────────
 .vs/
 .vscode/
