@@ -12,12 +12,15 @@ COPY nuget.config* ./
 COPY LocalPackages/ LocalPackages/
 COPY RPlus.SDK/ RPlus.SDK/
 COPY RPlusGrpc/ RPlusGrpc/
-COPY src/ src/
+COPY Directory.Packages.props RPlus.Kernel/
+COPY Directory.Build.props* RPlus.Kernel/
+COPY nuget.config* RPlus.Kernel/
+COPY src/ RPlus.Kernel/src/
 
-RUN dotnet restore src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj
+RUN dotnet restore RPlus.Kernel/src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj
 RUN dotnet build RPlus.SDK/RPlus.SDK.Contracts/RPlus.SDK.Contracts.csproj -c Release --no-restore || true
 RUN dotnet build RPlusGrpc/RPlusGrpc.csproj -c Release --no-restore || true
-RUN dotnet publish src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj -c Release -o /app/publish
+RUN dotnet publish RPlus.Kernel/src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
 RUN addgroup -S rplus && adduser -S rplus -G rplus
