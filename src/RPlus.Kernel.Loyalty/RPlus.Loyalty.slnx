@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="RPlus.Loyalty.Api/RPlus.Loyalty.Api.csproj" />
+  <Project Path="RPlus.Loyalty.Application/RPlus.Loyalty.Application.csproj" />
+  <Project Path="RPlus.Loyalty.Core/RPlus.Loyalty.Core.csproj" />
+  <Project Path="RPlus.Loyalty.Infrastructure/RPlus.Loyalty.Infrastructure.csproj" />
+  <Project Path="RPlus.Loyalty.Persistence/RPlus.Loyalty.Persistence.csproj" />
+</Solution>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.Kernel.Integration.Application\RPlus.Kernel.Integration.Application.csproj" />
+    <ProjectReference Include="..\RPlus.Kernel.Integration.Domain\RPlus.Kernel.Integration.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Core\RPlus.SDK.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Infrastructure\RPlus.SDK.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Contracts\RPlus.SDK.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Users\RPlus.SDK.Users.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Loyalty\RPlus.SDK.Loyalty.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="StackExchange.Redis" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+    <PackageReference Include="EFCore.NamingConventions" />
+  </ItemGroup>
+
+</Project>

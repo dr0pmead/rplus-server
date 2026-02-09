@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.Wallet.Domain\RPlus.Wallet.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Wallet\RPlus.SDK.Wallet.csproj" />
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Eventing\RPlus.SDK.Eventing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="MassTransit.Kafka" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
+  </ItemGroup>
+
+</Project>
+
+

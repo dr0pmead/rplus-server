@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.Gateway.Domain\RPlus.Gateway.Domain.csproj" />
+    <ProjectReference Include="..\RPlus.Gateway.Application\RPlus.Gateway.Application.csproj" />
+    <ProjectReference Include="..\RPlus.Gateway.Persistence\RPlus.Gateway.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Yarp.ReverseProxy"  />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis"  />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"  />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol"  />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting"  />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore"  />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http"  />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime"  />
+  </ItemGroup>
+
+    <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Security\RPlus.SDK.Security.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Infrastructure\RPlus.SDK.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
+

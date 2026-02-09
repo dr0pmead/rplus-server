@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.Kernel.Runtime.Domain\RPlus.Kernel.Runtime.Domain.csproj" />
+    <ProjectReference Include="..\RPlus.Kernel.Runtime.Persistence\RPlus.Kernel.Runtime.Persistence.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Core\RPlus.SDK.Core.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.Kernel.Integration.Application\RPlus.Kernel.Integration.Application.csproj" />
+    <ProjectReference Include="..\RPlus.Kernel.Integration.Infrastructure\RPlus.Kernel.Integration.Infrastructure.csproj" />
+    <ProjectReference Include="..\RPlus.Kernel.Integration.Domain\RPlus.Kernel.Integration.Domain.csproj" />
+    <ProjectReference Include="..\..\RPlus.Kernel.Access\src\RPlus.Access.Application\RPlus.Access.Application.csproj" />
+    <ProjectReference Include="..\..\RPlus.Kernel.Access\src\RPlus.Access.Domain\RPlus.Access.Domain.csproj" />
+    <ProjectReference Include="..\..\RPlus.Kernel.Access\src\RPlus.Access.Infrastructure\RPlus.Access.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Infrastructure\RPlus.SDK.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Core\RPlus.SDK.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlusGrpc\RPlusGrpc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Grpc.Net.ClientFactory" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+  </ItemGroup>
+
+</Project>

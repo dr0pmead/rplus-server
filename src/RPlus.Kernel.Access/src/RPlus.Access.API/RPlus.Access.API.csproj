@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <AssemblyName>ExecuteService</AssemblyName>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <NoWarn>$(NoWarn);NU1902</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR"  />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"  />
+    <PackageReference Include="Grpc.AspNetCore"  />
+    <PackageReference Include="Grpc.Net.Client"  />
+    <PackageReference Include="Microsoft.EntityFrameworkCore"  />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational"  />
+    <PackageReference Include="prometheus-net.AspNetCore"  />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="EFCore.NamingConventions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.Access.Application\RPlus.Access.Application.csproj" />
+    <ProjectReference Include="..\RPlus.Access.Infrastructure\RPlus.Access.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Contracts\RPlus.SDK.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Access\RPlus.SDK.Access.csproj" />
+    <ProjectReference Include="..\..\..\..\..\RPlusGrpc\RPlusGrpc.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+</Project>

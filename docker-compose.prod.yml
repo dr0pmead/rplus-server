@@ -1,0 +1,602 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RPlus Kernel — PRODUCTION Docker Compose
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Location: RPlus.Kernel/docker-compose.prod.yml
+# Run from: RPlus.Kernel/
+#
+# External (NOT in this compose):
+#   - PostgreSQL  → 10.10.10.50:5432
+#   - Redis       → 10.10.10.50:6379
+#   - AI (Ollama) → 10.10.10.20 (same port)
+#
+# Before first start:
+#   1. docker compose -f docker-compose.prod.yml up -d kernel-vault
+#   2. vault operator init / vault operator unseal
+#   3. export VAULT_ADDR=http://<vault-host>:8200 VAULT_TOKEN=<root-token>
+#   4. sh ../scripts/vault/production-seed.sh
+#   5. docker compose -f docker-compose.prod.yml up -d
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+x-vault-env: &vault-env
+  Vault__Address: http://kernel-vault:8200
+  Vault__Token: ${VAULT_TOKEN:?Set VAULT_TOKEN in shell before starting}
+  ASPNETCORE_ENVIRONMENT: Production
+
+x-kernel-build: &kernel-build
+  context: ..
+
+networks:
+  kernel-internal:
+    driver: bridge
+
+volumes:
+  kafka-data:
+  auth-keyring:
+  integration-keyring:
+  minio-data:
+  vault-data:
+
+
+services:
+
+  # ─── Reverse Proxy ──────────────────────────────────────────────────────────
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=false"
+      - "--api.dashboard=false"
+      - "--providers.file.filename=/etc/traefik/dynamic.yml"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "../certs:/etc/certs:ro"
+      - "../traefik_dynamic.yml:/etc/traefik/dynamic.yml:ro"
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  # ─── Vault (Production Mode) ───────────────────────────────────────────────
+  kernel-vault:
+    image: hashicorp/vault:1.15
+    container_name: kernel-vault
+    cap_add: [ IPC_LOCK ]
+    command: vault server -config=/vault/config/vault.hcl
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    volumes:
+      - vault-data:/vault/data
+      - ../scripts/vault/vault-prod.hcl:/vault/config/vault.hcl:ro
+    ports:
+      - "127.0.0.1:8200:8200"
+    networks:
+      - kernel-internal
+    healthcheck:
+      test: [ "CMD", "vault", "status", "-tls-skip-verify" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ─── Kafka (Redpanda) ──────────────────────────────────────────────────────
+  kernel-kafka:
+    image: redpandadata/redpanda:v23.1.15
+    container_name: kernel-kafka
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - 1G
+      - --reserve-memory
+      - 0M
+      - --node-id
+      - "0"
+      - --check=false
+      - --set
+      - redpanda.auto_create_topics_enabled=true
+      - --kafka-addr
+      - 0.0.0.0:9092
+      - --advertise-kafka-addr
+      - kernel-kafka:9092
+      - --rpc-addr
+      - 0.0.0.0:33145
+      - --advertise-rpc-addr
+      - kernel-kafka:33145
+    volumes:
+      - kafka-data:/var/lib/redpanda/data
+    healthcheck:
+      test: [ "CMD-SHELL", "rpk cluster health --brokers localhost:9092 > /dev/null 2>&1 || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  kernel-kafka-bootstrap:
+    image: redpandadata/redpanda:v23.1.15
+    container_name: kernel-kafka-bootstrap
+    depends_on:
+      kernel-kafka:
+        condition: service_healthy
+    entrypoint: [ "sh", "-c" ]
+    command:
+      - |
+        set -e
+        echo "[kafka-bootstrap] Ensuring required topics..."
+        rpk topic create users.user.updated.v1 --brokers kernel-kafka:9092 || true
+        rpk topic create kernel.integration.stats.v1 --brokers kernel-kafka:9092 || true
+        echo "[kafka-bootstrap] Done."
+    networks:
+      - kernel-internal
+    restart: "no"
+
+  # ─── MinIO (Object Storage) ────────────────────────────────────────────────
+  kernel-minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: rplus-kernel-minio
+    command: [ "server", "/data", "--console-address", ":9001" ]
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  # ─── Telemetry ──────────────────────────────────────────────────────────────
+  rplus-telemetry:
+    image: otel/opentelemetry-collector-contrib:0.80.0
+    container_name: rplus-telemetry
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    command: [ "--config", "/etc/otel-collector-config.yaml" ]
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Kernel Services — secrets from Vault ONLY
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  rplus-kernel-auth:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Auth/Dockerfile
+    container_name: rplus-kernel-auth
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5006;http://+:5007
+      DataProtection__KeyRingPath: /var/lib/rplus/auth-keys
+      Services__Guard: http://rplus-kernel-guard:5013
+      Services__Access__Http: http://rplus-kernel-access:5002
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      OTEL_SERVICE_NAME: rplus-kernel-auth
+    volumes:
+      - auth-keyring:/var/lib/rplus/auth-keys
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-kafka-bootstrap:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-access:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Access/Dockerfile
+    container_name: rplus-kernel-access
+    environment:
+      <<: *vault-env
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      Services__Audit__Grpc: http://rplus-kernel-audit:5010
+      Kafka__GroupId: rplus-kernel-access
+      OTEL_SERVICE_NAME: rplus-kernel-access
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-audit:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Audit/Dockerfile
+    container_name: rplus-kernel-audit
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5011
+      OTEL_SERVICE_NAME: rplus-kernel-audit
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-organization:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Organization/Dockerfile
+    container_name: rplus-kernel-organization
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5009
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      HR_GRPC_HOST: rplus-kernel-hr
+      HR_GRPC_PORT: "5016"
+      OTEL_SERVICE_NAME: rplus-kernel-organization
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-kernel-access:
+        condition: service_started
+      rplus-kernel-hr:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-hr:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.HR/Dockerfile
+    container_name: rplus-kernel-hr
+    environment:
+      <<: *vault-env
+      Documents__Http__BaseAddress: http://rplus-kernel-documents:5017
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      OTEL_SERVICE_NAME: rplus-kernel-hr
+    depends_on:
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-kernel-access:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-documents:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Documents/Dockerfile
+    container_name: rplus-kernel-documents
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5017
+      DOCUMENTS_S3_ENDPOINT: http://rplus-kernel-minio:9000
+      AWS_EC2_METADATA_DISABLED: "true"
+      OTEL_SERVICE_NAME: rplus-kernel-documents
+    depends_on:
+      kernel-minio:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-kernel-access:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-meta:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Meta/Dockerfile
+    container_name: rplus-kernel-meta
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5018
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      OTEL_SERVICE_NAME: rplus-kernel-meta
+    depends_on:
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-kernel-access:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-runtime:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Runtime/Dockerfile
+    container_name: rplus-kernel-runtime
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5020;http://+:5021
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      OTEL_SERVICE_NAME: rplus-kernel-runtime
+    depends_on:
+      kernel-vault:
+        condition: service_healthy
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-loyalty:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Loyalty/Dockerfile
+    container_name: rplus-kernel-loyalty
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5012;http://+:5013
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      Loyalty__UserContext__HrGrpcAddress: http://rplus-kernel-hr:5016
+      Loyalty__UserContext__OrganizationBaseAddress: http://rplus-kernel-organization:5009/
+      Loyalty__Meta__GrpcAddress: http://rplus-kernel-meta:5019
+      Loyalty__Runtime__GrpcAddress: http://rplus-kernel-runtime:5021
+      Loyalty__DynamicConsumption__Enabled: "false"
+      Loyalty__Scheduler__Enabled: "false"
+      Loyalty__Cron__Enabled: "true"
+      Loyalty__Cron__IntervalSeconds: "86400"
+      Loyalty__IngressTest__Enabled: "false"
+      OTEL_SERVICE_NAME: rplus-kernel-loyalty
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-kernel-access:
+        condition: service_started
+      rplus-kernel-organization:
+        condition: service_started
+      rplus-kernel-hr:
+        condition: service_started
+      rplus-kernel-runtime:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-wallet:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Wallet/Dockerfile
+    container_name: rplus-kernel-wallet
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5005
+      Kestrel__EndpointDefaults__Protocols: Http1AndHttp2
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      OTEL_SERVICE_NAME: rplus-kernel-wallet
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-access:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-walletadapter:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.WalletAdapter/Dockerfile
+    container_name: rplus-kernel-walletadapter
+    environment:
+      <<: *vault-env
+      Kafka__GroupId: wallet-adapter-group
+      OTEL_SERVICE_NAME: rplus-wallet-adapter
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-wallet:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-guard:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Guard/Dockerfile
+    container_name: rplus-kernel-guard
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5013
+      Kafka__GroupId: guard
+      OTEL_SERVICE_NAME: rplus-kernel-guard
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-integration:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Integration/Dockerfile
+    container_name: rplus-kernel-integration
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5008
+      Integration__Grpc__Services__users: http://rplus-kernel-users:5015
+      Services__Meta__Grpc: http://rplus-kernel-meta:5019
+      Integration__ListSync__RequiredPermission: integration.list.sync
+      Integration__Permissions__0: integration.list.sync
+      Integration__Permissions__1: integration.scan_fields.manage
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      DataProtection__KeyRingPath: /var/lib/rplus/integration-keys
+      OTEL_SERVICE_NAME: rplus-kernel-integration
+    volumes:
+      - integration-keyring:/var/lib/rplus/integration-keys
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-access:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  rplus-kernel-gateway:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Gateway/Dockerfile
+    container_name: rplus-kernel-gateway
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:80
+      Services__Users__Grpc: http://rplus-kernel-users:5015
+      Services__Integration__Grpc: http://rplus-kernel-integration:5013
+      Gateway__Tls__Mode: Disabled
+      Gateway__Tls__RedirectHttpToHttps: "false"
+      Cors__AllowedOrigins__0: https://rplus.rubikom.kz
+      Gateway__AuthCookies__Domain: .rubikom.kz
+      Realtime__Enabled: "true"
+      Realtime__Kafka__Topics__0: users.user.updated.v1
+      Realtime__Mappings__users.user.updated.v1__Type: system.access.updated
+      Realtime__Mappings__users.user.updated.v1__Category: invalidation
+      Realtime__Mappings__users.user.updated.v1__Action: invalidate
+      Realtime__Mappings__users.user.updated.v1__Target: access
+      Realtime__Mappings__users.user.updated.v1__Version: "1"
+      Realtime__Mappings__users.user.updated.v1__RequiredPermission: webadmin.access
+      Realtime__Mappings__users.user.updated.v1__Recipients__Strategy: AggregateId
+      Gateway__Upstreams__access__BaseAddress: http://rplus-kernel-access:5002
+      OTEL_SERVICE_NAME: rplus-kernel-gateway
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-kafka-bootstrap:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-access:
+        condition: service_started
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      kernel-internal:
+        aliases:
+          - kernel-gateway
+    ports:
+      - "127.0.0.1:8888:80"
+    restart: unless-stopped
+
+  rplus-kernel-users:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Users/Dockerfile
+    container_name: rplus-kernel-users
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5014;http://+:5015
+      Kafka__GroupId: users
+      RPlus__Access__PermissionDiscovery__PublishIntervalSeconds: "30"
+      OTEL_SERVICE_NAME: rplus-kernel-users
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-kernel-auth:
+        condition: service_started
+      rplus-kernel-access:
+        condition: service_started
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # RPlus.Hunter — AI Recruitment Service
+  # AI (Ollama) at 10.10.10.20
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  rplus-hunter:
+    build:
+      <<: *kernel-build
+      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Hunter/Dockerfile
+    container_name: rplus-hunter
+    environment:
+      <<: *vault-env
+      ASPNETCORE_URLS: http://+:5040
+      Kestrel__EndpointDefaults__Protocols: Http1AndHttp2
+      AI__BaseUrl: http://10.10.10.20:11434
+      OTEL_SERVICE_NAME: rplus-hunter
+    depends_on:
+      kernel-kafka:
+        condition: service_started
+      kernel-vault:
+        condition: service_healthy
+      rplus-telemetry:
+        condition: service_started
+    networks:
+      - kernel-internal
+    restart: unless-stopped

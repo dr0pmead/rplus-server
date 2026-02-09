@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.Access.Application\RPlus.Access.Application.csproj" />
+    <ProjectReference Include="..\RPlus.Access.Domain\RPlus.Access.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Core\RPlus.SDK.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Infrastructure\RPlus.SDK.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\..\RPlus.SDK\RPlus.SDK.Contracts\RPlus.SDK.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Confluent.Kafka"  />
+    <PackageReference Include="Microsoft.EntityFrameworkCore"  />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational"  />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis"  />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder"  />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions"  />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json"  />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"  />
+    <PackageReference Include="prometheus-net"  />
+    <PackageReference Include="StackExchange.Redis"  />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol"  />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting"  />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore"  />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http"  />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime"  />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience"  />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>$(NoWarn);NU1902</NoWarn>
+  </PropertyGroup>
+
+</Project>

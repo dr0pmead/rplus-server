@@ -1,0 +1,73 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/RPlus.Kernel.Access/" />
+  <Folder Name="/src/RPlus.Kernel.Access/src/">
+    <Project Path="src/RPlus.Kernel.Access/src/RPlus.Access.API/RPlus.Access.API.csproj" />
+    <Project Path="src/RPlus.Kernel.Access/src/RPlus.Access.Application/RPlus.Access.Application.csproj" />
+    <Project Path="src/RPlus.Kernel.Access/src/RPlus.Access.Domain/RPlus.Access.Domain.csproj" />
+    <Project Path="src/RPlus.Kernel.Access/src/RPlus.Access.Infrastructure/RPlus.Access.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/RPlus.Kernel.Auth/" />
+  <Folder Name="/src/RPlus.Kernel.Auth/src/">
+    <Project Path="src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj" />
+    <Project Path="src/RPlus.Kernel.Auth/src/RPlus.Auth.Application/RPlus.Auth.Application.csproj" />
+    <Project Path="src/RPlus.Kernel.Auth/src/RPlus.Auth.Domain/RPlus.Auth.Domain.csproj" />
+    <Project Path="src/RPlus.Kernel.Auth/src/RPlus.Auth.Infrastructure/RPlus.Auth.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/RPlus.Kernel.Gateway/" />
+  <Folder Name="/src/RPlus.Kernel.Gateway/src/">
+    <Project Path="src/RPlus.Kernel.Gateway/src/RPlus.Gateway.API/RPlus.Gateway.API.csproj" />
+    <Project Path="src/RPlus.Kernel.Gateway/src/RPlus.Gateway.Application/RPlus.Gateway.Application.csproj" />
+    <Project Path="src/RPlus.Kernel.Gateway/src/RPlus.Gateway.Domain/RPlus.Gateway.Domain.csproj" />
+    <Project Path="src/RPlus.Kernel.Gateway/src/RPlus.Gateway.Infrastructure/RPlus.Gateway.Infrastructure.csproj" />
+    <Project Path="src/RPlus.Kernel.Gateway/src/RPlus.Gateway.Persistence/RPlus.Gateway.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/RPlus.Kernel.Guard/" />
+  <Folder Name="/src/RPlus.Kernel.Guard/src/">
+    <Project Path="src/RPlus.Kernel.Guard/src/RPlus.Kernel.Guard.API/RPlus.Kernel.Guard.API.csproj" />
+    <Project Path="src/RPlus.Kernel.Guard/src/RPlus.Kernel.Guard.Application/RPlus.Kernel.Guard.Application.csproj" />
+    <Project Path="src/RPlus.Kernel.Guard/src/RPlus.Kernel.Guard.Domain/RPlus.Kernel.Guard.Domain.csproj" />
+    <Project Path="src/RPlus.Kernel.Guard/src/RPlus.Kernel.Guard.Infrastructure/RPlus.Kernel.Guard.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/RPlus.Kernel.Integration/">
+      <Project Path="src/RPlus.Kernel.Integration/RPlus.Kernel.Integration.API/RPlus.Kernel.Integration.API.csproj" />
+      <Project Path="src/RPlus.Kernel.Integration/RPlus.Kernel.Integration.Application/RPlus.Kernel.Integration.Application.csproj" />
+      <Project Path="src/RPlus.Kernel.Integration/RPlus.Kernel.Integration.Domain/RPlus.Kernel.Integration.Domain.csproj" />
+      <Project Path="src/RPlus.Kernel.Integration/RPlus.Kernel.Integration.Infrastructure/RPlus.Kernel.Integration.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/RPlus.Kernel.Loyalty/">
+      <Project Path="src/RPlus.Kernel.Loyalty/RPlus.Loyalty.Api/RPlus.Loyalty.Api.csproj" />
+      <Project Path="src/RPlus.Kernel.Loyalty/RPlus.Loyalty.Application/RPlus.Loyalty.Application.csproj" />
+      <Project Path="src/RPlus.Kernel.Loyalty/RPlus.Loyalty.Domain/RPlus.Loyalty.Domain.csproj" />
+      <Project Path="src/RPlus.Kernel.Loyalty/RPlus.Loyalty.Infrastructure/RPlus.Loyalty.Infrastructure.csproj" />
+      <Project Path="src/RPlus.Kernel.Loyalty/RPlus.Loyalty.Persistence/RPlus.Loyalty.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/RPlus.Kernel.Users/" />
+  <Folder Name="/src/RPlus.Kernel.Users/src/">
+    <Project Path="src/RPlus.Kernel.Users/src/RPlus.Users.API/RPlus.Users.API.csproj" />
+    <Project Path="src/RPlus.Kernel.Users/src/RPlus.Users.Application/RPlus.Users.Application.csproj" />
+    <Project Path="src/RPlus.Kernel.Users/src/RPlus.Users.Domain/RPlus.Users.Domain.csproj" />
+    <Project Path="src/RPlus.Kernel.Users/src/RPlus.Users.Infrastructure/RPlus.Users.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/RPlus.Kernel.Wallet/" />
+  <Folder Name="/src/RPlus.Kernel.Wallet/src/">
+    <Project Path="src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Api/RPlus.Wallet.Api.csproj" />
+    <Project Path="src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Application/RPlus.Wallet.Application.csproj" />
+    <Project Path="src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Domain/RPlus.Wallet.Domain.csproj" />
+    <Project Path="src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Infrastructure/RPlus.Wallet.Infrastructure.csproj" />
+    <Project Path="src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Persistence/RPlus.Wallet.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/RPlus.Kernel.Hunter/">
+    <Project Path="src/RPlus.Kernel.Hunter/RPlus.Hunter.API/RPlus.Hunter.API.csproj" />
+  </Folder>
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Access\RPlus.SDK.Access.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Contracts\RPlus.SDK.Contracts.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Core\RPlus.SDK.Core.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Eventing\RPlus.SDK.Eventing.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Infrastructure\RPlus.SDK.Infrastructure.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Integration\RPlus.SDK.Integration.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Loyalty\RPlus.SDK.Loyalty.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Security\RPlus.SDK.Security.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.Hunter\RPlus.SDK.Hunter.csproj" />
+  <Project Path="F:\RPlus Framework\RPlus.SDK\RPlus.SDK.AI\RPlus.SDK.AI.csproj" />
+</Solution>

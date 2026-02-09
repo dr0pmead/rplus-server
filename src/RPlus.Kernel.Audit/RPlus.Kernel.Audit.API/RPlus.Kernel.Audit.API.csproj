@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.Kernel.Audit.Application\RPlus.Kernel.Audit.Application.csproj" />
+    <ProjectReference Include="..\RPlus.Kernel.Audit.Infrastructure\RPlus.Kernel.Audit.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Infrastructure\RPlus.SDK.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlus.SDK\RPlus.SDK.Contracts\RPlus.SDK.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\RPlusGrpc\RPlusGrpc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,6 @@
+@RPlus.Wallet.Api_HostAddress = http://localhost:5268
+
+GET {{RPlus.Wallet.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
