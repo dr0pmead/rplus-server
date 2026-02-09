@@ -39,14 +39,14 @@ spec:
             capabilities:
               add: ["IPC_LOCK"]
           readinessProbe:
-            exec:
-              command: ["vault", "status", "-tls-skip-verify"]
+            tcpSocket:
+              port: 8200
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
-            exec:
-              command: ["vault", "status", "-tls-skip-verify"]
-            initialDelaySeconds: 15
+            tcpSocket:
+              port: 8200
+            initialDelaySeconds: 10
             periodSeconds: 20
       volumes:
         - name: vault-data
