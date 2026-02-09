@@ -1,0 +1,95 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RPlus Kernel — Gateway (API Gateway + Realtime WebSocket)
+# HTTP: 80
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-gateway
+  namespace: rplus
+  labels:
+    app: rplus-kernel-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-gateway
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-gateway
+    spec:
+      containers:
+        - name: gateway
+          image: rplus-gateway:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:80"
+            - name: Services__Users__Grpc
+              value: "http://rplus-kernel-users:5015"
+            - name: Services__Integration__Grpc
+              value: "http://rplus-kernel-integration:5013"
+            - name: Gateway__Tls__Mode
+              value: "Disabled"
+            - name: Gateway__Tls__RedirectHttpToHttps
+              value: "false"
+            - name: Cors__AllowedOrigins__0
+              value: "https://rplus.rubikom.kz"
+            - name: Gateway__AuthCookies__Domain
+              value: ".rubikom.kz"
+            - name: Realtime__Enabled
+              value: "true"
+            - name: Realtime__Kafka__Topics__0
+              value: "users.user.updated.v1"
+            - name: Realtime__Mappings__users.user.updated.v1__Type
+              value: "system.access.updated"
+            - name: Realtime__Mappings__users.user.updated.v1__Category
+              value: "invalidation"
+            - name: Realtime__Mappings__users.user.updated.v1__Action
+              value: "invalidate"
+            - name: Realtime__Mappings__users.user.updated.v1__Target
+              value: "access"
+            - name: Realtime__Mappings__users.user.updated.v1__Version
+              value: "1"
+            - name: Realtime__Mappings__users.user.updated.v1__RequiredPermission
+              value: "webadmin.access"
+            - name: Realtime__Mappings__users.user.updated.v1__Recipients__Strategy
+              value: "AggregateId"
+            - name: Gateway__Upstreams__access__BaseAddress
+              value: "http://rplus-kernel-access:5002"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-gateway"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-gateway
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-gateway
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
+    - port: 8888
+      targetPort: 80
+      name: external

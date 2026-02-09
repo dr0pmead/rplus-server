@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Traefik — Reverse Proxy / Ingress
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik
+  namespace: rplus
+  labels:
+    app: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      containers:
+        - name: traefik
+          image: traefik:v2.10
+          args:
+            - "--api.insecure=false"
+            - "--api.dashboard=false"
+            - "--providers.kubernetesingress"
+            - "--entrypoints.web.address=:80"
+            - "--entrypoints.websecure.address=:443"
+          ports:
+            - containerPort: 80
+              name: web
+            - containerPort: 443
+              name: websecure
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik
+  namespace: rplus
+spec:
+  type: LoadBalancer
+  selector:
+    app: traefik
+  ports:
+    - port: 80
+      targetPort: 80
+      name: web
+    - port: 443
+      targetPort: 443
+      name: websecure

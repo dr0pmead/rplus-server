@@ -1,0 +1,84 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# OpenTelemetry Collector — Observability
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-telemetry
+  namespace: rplus
+  labels:
+    app: rplus-telemetry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-telemetry
+  template:
+    metadata:
+      labels:
+        app: rplus-telemetry
+    spec:
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.80.0
+          args: ["--config", "/etc/otel-collector-config.yaml"]
+          ports:
+            - containerPort: 4317
+              name: otlp-grpc
+            - containerPort: 4318
+              name: otlp-http
+          volumeMounts:
+            - name: otel-config
+              mountPath: /etc/otel-collector-config.yaml
+              subPath: otel-collector-config.yaml
+      volumes:
+        - name: otel-config
+          configMap:
+            name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-telemetry
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-telemetry
+  ports:
+    - port: 4317
+      targetPort: 4317
+      name: otlp-grpc
+    - port: 4318
+      targetPort: 4318
+      name: otlp-http
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: rplus
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: "0.0.0.0:4317"
+          http:
+            endpoint: "0.0.0.0:4318"
+    processors:
+      batch:
+        timeout: 5s
+    exporters:
+      logging:
+        loglevel: info
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging]

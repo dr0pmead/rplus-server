@@ -1,0 +1,29 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RPlus — Namespace + Shared Resources
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rplus
+  labels:
+    app.kubernetes.io/part-of: rplus
+---
+# Vault connection config shared by all services
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-config
+  namespace: rplus
+data:
+  VAULT_ADDR: "http://kernel-vault:8200"
+  ASPNETCORE_ENVIRONMENT: "Production"
+---
+# Vault token (use a Secret in production)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-token
+  namespace: rplus
+type: Opaque
+stringData:
+  VAULT_TOKEN: "CHANGE_ME"

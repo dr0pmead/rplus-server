@@ -1,0 +1,77 @@
+# RPlus Kernel — Loyalty Service (HTTP: 5012, gRPC: 5013)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-loyalty
+  namespace: rplus
+  labels:
+    app: rplus-kernel-loyalty
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-loyalty
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-loyalty
+    spec:
+      containers:
+        - name: loyalty
+          image: rplus-loyalty:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5012
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5012;http://+:5013"
+            - name: RPlus__Access__PermissionDiscovery__PublishIntervalSeconds
+              value: "30"
+            - name: Loyalty__UserContext__HrGrpcAddress
+              value: "http://rplus-kernel-hr:5016"
+            - name: Loyalty__UserContext__OrganizationBaseAddress
+              value: "http://rplus-kernel-organization:5009/"
+            - name: Loyalty__Meta__GrpcAddress
+              value: "http://rplus-kernel-meta:5019"
+            - name: Loyalty__Runtime__GrpcAddress
+              value: "http://rplus-kernel-runtime:5021"
+            - name: Loyalty__DynamicConsumption__Enabled
+              value: "false"
+            - name: Loyalty__Scheduler__Enabled
+              value: "false"
+            - name: Loyalty__Cron__Enabled
+              value: "true"
+            - name: Loyalty__Cron__IntervalSeconds
+              value: "86400"
+            - name: Loyalty__IngressTest__Enabled
+              value: "false"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-loyalty"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5012
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-loyalty
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-loyalty
+  ports:
+    - port: 5012
+      targetPort: 5012
+      name: http

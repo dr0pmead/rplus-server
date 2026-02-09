@@ -1,0 +1,63 @@
+# RPlus Kernel — Organization Service (HTTP: 5009)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-organization
+  namespace: rplus
+  labels:
+    app: rplus-kernel-organization
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-organization
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-organization
+    spec:
+      containers:
+        - name: organization
+          image: rplus-organization:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5009
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5009"
+            - name: RPlus__Access__PermissionDiscovery__PublishIntervalSeconds
+              value: "30"
+            - name: HR_GRPC_HOST
+              value: "rplus-kernel-hr"
+            - name: HR_GRPC_PORT
+              value: "5016"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-organization"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5009
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-organization
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-organization
+  ports:
+    - port: 5009
+      targetPort: 5009
+      name: http

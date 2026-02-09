@@ -1,0 +1,79 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RPlus Kernel — Auth Service
+# HTTP: 5006, gRPC: 5007
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-auth
+  namespace: rplus
+  labels:
+    app: rplus-kernel-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-auth
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-auth
+    spec:
+      containers:
+        - name: auth
+          image: rplus-auth:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5006
+              name: http
+            - containerPort: 5007
+              name: grpc
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5006;http://+:5007"
+            - name: DataProtection__KeyRingPath
+              value: "/var/lib/rplus/auth-keys"
+            - name: Services__Guard
+              value: "http://rplus-kernel-guard:5013"
+            - name: Services__Access__Http
+              value: "http://rplus-kernel-access:5002"
+            - name: RPlus__Access__PermissionDiscovery__PublishIntervalSeconds
+              value: "30"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-auth"
+          volumeMounts:
+            - name: auth-keyring
+              mountPath: /var/lib/rplus/auth-keys
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5006
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: auth-keyring
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-auth
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-auth
+  ports:
+    - port: 5006
+      targetPort: 5006
+      name: http
+    - port: 5007
+      targetPort: 5007
+      name: grpc

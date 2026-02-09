@@ -1,0 +1,64 @@
+# RPlus Kernel — Meta Service (HTTP: 5018, gRPC: 5019)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-meta
+  namespace: rplus
+  labels:
+    app: rplus-kernel-meta
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-meta
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-meta
+    spec:
+      containers:
+        - name: meta
+          image: rplus-meta:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5018
+              name: http
+            - containerPort: 5019
+              name: grpc
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5018"
+            - name: RPlus__Access__PermissionDiscovery__PublishIntervalSeconds
+              value: "30"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-meta"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5018
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-meta
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-meta
+  ports:
+    - port: 5018
+      targetPort: 5018
+      name: http
+    - port: 5019
+      targetPort: 5019
+      name: grpc

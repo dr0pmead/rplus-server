@@ -1,0 +1,124 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Kafka (Redpanda) — Event Streaming
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kernel-kafka
+  namespace: rplus
+  labels:
+    app: kernel-kafka
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kernel-kafka
+  template:
+    metadata:
+      labels:
+        app: kernel-kafka
+    spec:
+      containers:
+        - name: redpanda
+          image: redpandadata/redpanda:v23.1.15
+          args:
+            - redpanda
+            - start
+            - --overprovisioned
+            - --smp
+            - "1"
+            - --memory
+            - 1G
+            - --reserve-memory
+            - 0M
+            - --node-id
+            - "0"
+            - --check=false
+            - --set
+            - redpanda.auto_create_topics_enabled=true
+            - --kafka-addr
+            - 0.0.0.0:9092
+            - --advertise-kafka-addr
+            - kernel-kafka:9092
+            - --rpc-addr
+            - 0.0.0.0:33145
+            - --advertise-rpc-addr
+            - kernel-kafka:33145
+          ports:
+            - containerPort: 9092
+              name: kafka
+            - containerPort: 33145
+              name: rpc
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /var/lib/redpanda/data
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "rpk cluster health --brokers localhost:9092 > /dev/null 2>&1"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+            limits:
+              memory: "1536Mi"
+      volumes:
+        - name: kafka-data
+          persistentVolumeClaim:
+            claimName: kafka-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kernel-kafka
+  namespace: rplus
+spec:
+  selector:
+    app: kernel-kafka
+  ports:
+    - port: 9092
+      targetPort: 9092
+      name: kafka
+    - port: 33145
+      targetPort: 33145
+      name: rpc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-data-pvc
+  namespace: rplus
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Bootstrap job — creates required topics
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-bootstrap
+  namespace: rplus
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-kafka
+          image: redpandadata/redpanda:v23.1.15
+          command: ["sh", "-c", "until rpk cluster health --brokers kernel-kafka:9092; do sleep 2; done"]
+      containers:
+        - name: bootstrap
+          image: redpandadata/redpanda:v23.1.15
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "[kafka-bootstrap] Creating topics..."
+              rpk topic create users.user.updated.v1 --brokers kernel-kafka:9092 || true
+              rpk topic create kernel.integration.stats.v1 --brokers kernel-kafka:9092 || true
+              echo "[kafka-bootstrap] Done."

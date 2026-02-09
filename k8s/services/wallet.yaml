@@ -1,0 +1,61 @@
+# RPlus Kernel — Wallet Service (HTTP: 5005)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-wallet
+  namespace: rplus
+  labels:
+    app: rplus-kernel-wallet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-wallet
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-wallet
+    spec:
+      containers:
+        - name: wallet
+          image: rplus-wallet:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5005
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5005"
+            - name: Kestrel__EndpointDefaults__Protocols
+              value: "Http1AndHttp2"
+            - name: RPlus__Access__PermissionDiscovery__PublishIntervalSeconds
+              value: "30"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-wallet"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5005
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-wallet
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-wallet
+  ports:
+    - port: 5005
+      targetPort: 5005
+      name: http

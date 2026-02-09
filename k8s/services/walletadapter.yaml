@@ -1,0 +1,47 @@
+# RPlus Kernel — WalletAdapter Service (Kafka consumer)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-walletadapter
+  namespace: rplus
+  labels:
+    app: rplus-kernel-walletadapter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-walletadapter
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-walletadapter
+    spec:
+      containers:
+        - name: walletadapter
+          image: rplus-walletadapter:latest
+          imagePullPolicy: Never
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: Kafka__GroupId
+              value: "wallet-adapter-group"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-wallet-adapter"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-walletadapter
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-walletadapter
+  ports:
+    - port: 80
+      targetPort: 80

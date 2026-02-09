@@ -1,0 +1,80 @@
+# RPlus Kernel — Integration Service (HTTP: 5008)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-integration
+  namespace: rplus
+  labels:
+    app: rplus-kernel-integration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-integration
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-integration
+    spec:
+      containers:
+        - name: integration
+          image: rplus-integration:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5008
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5008"
+            - name: Integration__Grpc__Services__users
+              value: "http://rplus-kernel-users:5015"
+            - name: Services__Meta__Grpc
+              value: "http://rplus-kernel-meta:5019"
+            - name: Integration__ListSync__RequiredPermission
+              value: "integration.list.sync"
+            - name: Integration__Permissions__0
+              value: "integration.list.sync"
+            - name: Integration__Permissions__1
+              value: "integration.scan_fields.manage"
+            - name: RPlus__Access__PermissionDiscovery__PublishIntervalSeconds
+              value: "30"
+            - name: DataProtection__KeyRingPath
+              value: "/var/lib/rplus/integration-keys"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-integration"
+          volumeMounts:
+            - name: integration-keyring
+              mountPath: /var/lib/rplus/integration-keys
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5008
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: integration-keyring
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-integration
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-integration
+  ports:
+    - port: 5008
+      targetPort: 5008
+      name: http
+    - port: 5013
+      targetPort: 5013
+      name: grpc

@@ -1,0 +1,59 @@
+# RPlus Kernel — HR Service (HTTP: 5016)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-hr
+  namespace: rplus
+  labels:
+    app: rplus-kernel-hr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-hr
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-hr
+    spec:
+      containers:
+        - name: hr
+          image: rplus-hr:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5016
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: Documents__Http__BaseAddress
+              value: "http://rplus-kernel-documents:5017"
+            - name: RPlus__Access__PermissionDiscovery__PublishIntervalSeconds
+              value: "30"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-hr"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5016
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-hr
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-hr
+  ports:
+    - port: 5016
+      targetPort: 5016
+      name: http

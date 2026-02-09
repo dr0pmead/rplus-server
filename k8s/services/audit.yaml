@@ -1,0 +1,65 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RPlus Kernel — Audit Service
+# gRPC: 5010, HTTP: 5011
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-audit
+  namespace: rplus
+  labels:
+    app: rplus-kernel-audit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-audit
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-audit
+    spec:
+      containers:
+        - name: audit
+          image: rplus-audit:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5010
+              name: grpc
+            - containerPort: 5011
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5011"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-audit"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5011
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-audit
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-audit
+  ports:
+    - port: 5010
+      targetPort: 5010
+      name: grpc
+    - port: 5011
+      targetPort: 5011
+      name: http

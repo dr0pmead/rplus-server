@@ -1,0 +1,101 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# HashiCorp Vault — Secret Management
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kernel-vault
+  namespace: rplus
+  labels:
+    app: kernel-vault
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kernel-vault
+  template:
+    metadata:
+      labels:
+        app: kernel-vault
+    spec:
+      containers:
+        - name: vault
+          image: hashicorp/vault:1.15
+          command: ["vault", "server", "-config=/vault/config/vault.hcl"]
+          ports:
+            - containerPort: 8200
+              name: http
+          env:
+            - name: VAULT_ADDR
+              value: "http://127.0.0.1:8200"
+          volumeMounts:
+            - name: vault-data
+              mountPath: /vault/data
+            - name: vault-config
+              mountPath: /vault/config
+          securityContext:
+            capabilities:
+              add: ["IPC_LOCK"]
+          readinessProbe:
+            exec:
+              command: ["vault", "status", "-tls-skip-verify"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["vault", "status", "-tls-skip-verify"]
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: vault-data
+          persistentVolumeClaim:
+            claimName: vault-data-pvc
+        - name: vault-config
+          configMap:
+            name: vault-hcl-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kernel-vault
+  namespace: rplus
+spec:
+  selector:
+    app: kernel-vault
+  ports:
+    - port: 8200
+      targetPort: 8200
+      name: http
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vault-data-pvc
+  namespace: rplus
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Vault server config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-hcl-config
+  namespace: rplus
+data:
+  vault.hcl: |
+    storage "file" {
+      path = "/vault/data"
+    }
+    listener "tcp" {
+      address     = "0.0.0.0:8200"
+      tls_disable = 1
+    }
+    ui            = true
+    disable_mlock = true
+    api_addr      = "http://0.0.0.0:8200"

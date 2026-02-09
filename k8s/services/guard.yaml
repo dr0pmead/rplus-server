@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RPlus Kernel — Guard (Rate Limiting / Anti-Fraud)
+# gRPC: 5013
+# ═══════════════════════════════════════════════════════════════════════════════
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-guard
+  namespace: rplus
+  labels:
+    app: rplus-kernel-guard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-guard
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-guard
+    spec:
+      containers:
+        - name: guard
+          image: rplus-guard:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5013
+              name: grpc
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5013"
+            - name: Kafka__GroupId
+              value: "guard"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-guard"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-guard
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-guard
+  ports:
+    - port: 5013
+      targetPort: 5013
+      name: grpc

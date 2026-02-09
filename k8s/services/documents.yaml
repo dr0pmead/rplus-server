@@ -1,0 +1,61 @@
+# RPlus Kernel — Documents Service (HTTP: 5017)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-documents
+  namespace: rplus
+  labels:
+    app: rplus-kernel-documents
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-documents
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-documents
+    spec:
+      containers:
+        - name: documents
+          image: rplus-documents:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5017
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5017"
+            - name: DOCUMENTS_S3_ENDPOINT
+              value: "http://kernel-minio:9000"
+            - name: AWS_EC2_METADATA_DISABLED
+              value: "true"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-kernel-documents"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5017
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-documents
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-documents
+  ports:
+    - port: 5017
+      targetPort: 5017
+      name: http

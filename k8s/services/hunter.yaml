@@ -1,0 +1,61 @@
+# RPlus Hunter — AI Recruitment Service (HTTP: 5040)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rplus-kernel-hunter
+  namespace: rplus
+  labels:
+    app: rplus-kernel-hunter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rplus-kernel-hunter
+  template:
+    metadata:
+      labels:
+        app: rplus-kernel-hunter
+    spec:
+      containers:
+        - name: hunter
+          image: rplus-hunter:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5040
+              name: http
+          envFrom:
+            - configMapRef:
+                name: vault-config
+          env:
+            - name: Vault__Token
+              valueFrom:
+                secretKeyRef:
+                  name: vault-token
+                  key: VAULT_TOKEN
+            - name: ASPNETCORE_URLS
+              value: "http://+:5040"
+            - name: Kestrel__EndpointDefaults__Protocols
+              value: "Http1AndHttp2"
+            - name: AI__BaseUrl
+              value: "http://10.10.10.20:11434"
+            - name: OTEL_SERVICE_NAME
+              value: "rplus-hunter"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5040
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rplus-kernel-hunter
+  namespace: rplus
+spec:
+  selector:
+    app: rplus-kernel-hunter
+  ports:
+    - port: 5040
+      targetPort: 5040
+      name: http
