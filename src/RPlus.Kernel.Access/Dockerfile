@@ -11,6 +11,7 @@ COPY RPlus.SDK/ RPlus.SDK/
 COPY RPlusGrpc/ RPlusGrpc/
 COPY Directory.Packages.props RPlus.Kernel/
 COPY Directory.Build.props* RPlus.Kernel/
+COPY LocalPackages/ RPlus.Kernel/LocalPackages/
 COPY nuget.config* RPlus.Kernel/
 COPY src/ RPlus.Kernel/src/
 RUN dotnet restore RPlus.Kernel/src/RPlus.Kernel.Access/src/RPlus.Access.API/RPlus.Access.API.csproj
