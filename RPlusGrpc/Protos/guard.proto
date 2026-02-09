@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option csharp_namespace = "RPlusGrpc.Guard";
+
+package rplus.guard.v1;
+
+service GuardService {
+  rpc Check (CheckRequest) returns (CheckResponse);
+  rpc CreateChallenge (CreateChallengeRequest) returns (CreateChallengeResponse);
+  rpc VerifyPow (VerifyPowRequest) returns (VerifyPowResponse);
+}
+
+message CheckRequest {
+  string ip_address = 1;
+  string route = 2;
+  map<string, string> headers = 3;
+}
+
+message CheckResponse {
+  bool is_allowed = 1;
+  int32 decision_type = 2; // 0=Allow, 1=Throttle, 2=Challenge, 3=Block
+  string reason = 3;
+  int32 threat_level = 4;
+  int32 ttl_seconds = 5;
+  bool is_terminal = 6;
+  string policy_id = 7;
+  int32 effective_threat_level = 8;
+}
+
+message CreateChallengeRequest {
+  string ip_address = 1;
+  string scope = 2;
+}
+
+message CreateChallengeResponse {
+  string challenge_id = 1;
+  string salt = 2;
+  int32 difficulty = 3;
+  int64 expires_at = 4;
+  string scope = 5;
+}
+
+message VerifyPowRequest {
+  string challenge_id = 1;
+  string nonce = 2;
+  string ip_address = 3;
+}
+
+message VerifyPowResponse {
+    bool is_valid = 1;
+    string hash = 2;
+    string error = 3;
+}

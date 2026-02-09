@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package rplus.runtime.v1;
+
+option go_package = "rplus/runtime/v1;runtimev1";
+option csharp_namespace = "RPlusGrpc.Runtime";
+option java_multiple_files = true;
+option java_package = "com.rplus.runtime.v1";
+
+import "google/protobuf/timestamp.proto";
+
+service RuntimeService {
+  rpc ExecuteGraph(ExecuteGraphRequest) returns (ExecuteGraphResponse);
+  rpc SimulateGraph(ExecuteGraphRequest) returns (ExecuteGraphResponse);
+}
+
+message ExecuteGraphRequest {
+  string rule_id = 1;
+  string user_id = 2;
+  string operation_id = 3;
+  string graph_json = 4;
+  string variables_json = 5;
+  string event_json = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+  string start_node_override = 8;
+}
+
+message ExecuteGraphResponse {
+  bool success = 1;
+  string error = 2;
+  RuntimeExecution execution = 3;
+  RuntimeAudienceSelection audience = 4;
+  repeated string award_node_ids = 5;
+  repeated RuntimeAction actions = 6;
+}
+
+message RuntimeExecution {
+  string execution_id = 1;
+  bool matched = 2;
+  double points_delta = 3;
+}
+
+message RuntimeAction {
+  string node_id = 1;
+  string kind = 2;
+  string data_json = 3;
+}
+
+message RuntimeAudienceSelection {
+  string node_id = 1;
+  string query_json = 2;
+  string resume_from_node_id = 3;
+}

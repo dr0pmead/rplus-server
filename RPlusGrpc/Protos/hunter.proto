@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package rplus.hunter;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "RPlusGrpc.Hunter";
+
+// ─── Service ────────────────────────────────────────────────────────
+
+service HunterService {
+  // Task CRUD
+  rpc CreateTask (CreateTaskRequest) returns (CreateTaskResponse);
+  rpc GetTask (GetTaskRequest) returns (TaskResponse);
+  rpc ListTasks (ListTasksRequest) returns (ListTasksResponse);
+  rpc UpdateTaskStatus (UpdateTaskStatusRequest) returns (TaskResponse);
+
+  // Manual profile injection (for testing without HH)
+  rpc InjectProfile (InjectProfileRequest) returns (InjectProfileResponse);
+
+  // Stats
+  rpc GetTaskStats (GetTaskStatsRequest) returns (TaskStatsResponse);
+}
+
+// ─── Task Messages ──────────────────────────────────────────────────
+
+message CreateTaskRequest {
+  string position_name = 1;
+  string search_query = 2;
+  string conditions = 3;
+  string message_template = 4;
+  int32 daily_contact_limit = 5;
+  int32 min_score = 6;
+  string created_by_user_id = 7;
+}
+
+message CreateTaskResponse {
+  string task_id = 1;
+}
+
+message GetTaskRequest {
+  string task_id = 1;
+}
+
+message ListTasksRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string status_filter = 3;  // optional filter: "ACTIVE", "PAUSED", etc.
+}
+
+message ListTasksResponse {
+  repeated TaskResponse tasks = 1;
+  int32 total_count = 2;
+}
+
+message UpdateTaskStatusRequest {
+  string task_id = 1;
+  string status = 2;  // ACTIVE, PAUSED, COMPLETED, CANCELLED
+}
+
+message TaskResponse {
+  string id = 1;
+  string position_name = 2;
+  string search_query = 3;
+  string conditions = 4;
+  string message_template = 5;
+  int32 daily_contact_limit = 6;
+  int32 min_score = 7;
+  string status = 8;
+  int32 candidates_found = 9;
+  int32 candidates_contacted = 10;
+  int32 candidates_responded = 11;
+  google.protobuf.Timestamp created_at = 12;
+  string created_by_user_id = 13;
+}
+
+// ─── Profile Messages ───────────────────────────────────────────────
+
+message InjectProfileRequest {
+  string task_id = 1;
+  string external_id = 2;
+  string raw_data = 3;
+  string source = 4;  // "hh.ru", "manual", etc.
+}
+
+message InjectProfileResponse {
+  string profile_id = 1;
+  bool is_duplicate = 2;
+}
+
+// ─── Stats ──────────────────────────────────────────────────────────
+
+message GetTaskStatsRequest {
+  string task_id = 1;
+}
+
+message TaskStatsResponse {
+  int32 total_parsed = 1;
+  int32 pending_scoring = 2;
+  int32 passed = 3;
+  int32 rejected = 4;
+  int32 contacts_opened = 5;
+  int32 messages_sent = 6;
+  int32 responses_received = 7;
+  int32 daily_contacts_remaining = 8;
+}

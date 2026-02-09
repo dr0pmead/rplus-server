@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <RPlusSdkVersion>2.1.22</RPlusSdkVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Exclude accidental intermediate output folders from compilation (they contain generated AssemblyInfo.cs). -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/obj2/**;**\obj2\**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

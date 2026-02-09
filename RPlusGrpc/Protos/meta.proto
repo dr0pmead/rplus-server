@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package rplus.meta;
+
+option csharp_namespace = "RPlusGrpc.Meta";
+
+import "google/protobuf/timestamp.proto";
+
+service MetaService {
+  rpc GetListByKey (GetListByKeyRequest) returns (MetaListResponse);
+  rpc GetListItems (GetListItemsRequest) returns (MetaListItemsResponse);
+  rpc GetListFields (GetListFieldsRequest) returns (GetListFieldsResponse);
+  rpc GetEntityFields (GetEntityFieldsRequest) returns (GetEntityFieldsResponse);
+  rpc GetEntityFieldValues (GetEntityFieldValuesRequest) returns (GetEntityFieldValuesResponse);
+  rpc UpsertListItems (UpsertListItemsRequest) returns (UpsertListItemsResponse);
+  rpc DeleteListItems (DeleteListItemsRequest) returns (DeleteListItemsResponse);
+}
+
+message GetListByKeyRequest {
+  string key = 1;
+}
+
+message GetListItemsRequest {
+  string list_id = 1;
+}
+
+message MetaListResponse {
+  bool found = 1;
+  MetaList list = 2;
+}
+
+message MetaListItemsResponse {
+  repeated MetaListItem items = 1;
+}
+
+message GetListFieldsRequest {
+  string listId = 1;
+}
+
+message GetEntityFieldsRequest {
+  string entity_type_key = 1;
+}
+
+message GetEntityFieldsResponse {
+  repeated MetaFieldDefinition fields = 1;
+}
+
+message GetEntityFieldValuesRequest {
+  string entity_type_key = 1;
+  string subject_id = 2;
+  repeated string field_keys = 3;
+}
+
+message GetEntityFieldValuesResponse {
+  repeated MetaFieldValue values = 1;
+}
+
+message MetaFieldValue {
+  string key = 1;
+  string value_json = 2;
+}
+
+message MetaFieldDefinition {
+  string id = 1;
+  string key = 2;
+  string title = 3;
+  string dataType = 4;
+  string optionsJson = 5;
+  bool isRequired = 6;
+  bool isActive = 7;
+  int32 order = 8;
+}
+
+message GetListFieldsResponse {
+  repeated MetaFieldDefinition fields = 1;
+}
+
+message UpsertListItemsRequest {
+  string list_id = 1;
+  bool strict = 2;
+  repeated UpsertListItem items = 3;
+}
+
+message UpsertListItem {
+  string external_id = 1;
+  string code = 2;
+  string title = 3;
+  string value_json = 4;
+  bool is_active = 5;
+  int32 order = 6;
+}
+
+message UpsertListItemsResponse {
+  repeated UpsertListItemResult results = 1;
+}
+
+message UpsertListItemResult {
+  string external_id = 1;
+  string code = 2;
+  string status = 3;
+  string error = 4;
+}
+
+message DeleteListItemsRequest {
+  string list_id = 1;
+  repeated string external_id = 2;
+}
+
+message DeleteListItemsResponse {
+  repeated DeleteListItemResult results = 1;
+}
+
+message DeleteListItemResult {
+  string external_id = 1;
+  string status = 2;
+  string error = 3;
+}
+
+message MetaList {
+  string id = 1;
+  string key = 2;
+  string title = 3;
+  string description = 4;
+  string sync_mode = 5;
+  bool is_system = 6;
+  bool is_active = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message MetaListItem {
+  string id = 1;
+  string list_id = 2;
+  string code = 3;
+  string title = 4;
+  string value_json = 5;
+  string external_id = 6;
+  bool is_active = 7;
+  int32 order = 8;
+  google.protobuf.Timestamp created_at = 9;
+}

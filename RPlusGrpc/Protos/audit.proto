@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package rplus.audit.v1;
+
+option csharp_namespace = "RPlusGrpc.Audit";
+
+import "google/protobuf/timestamp.proto";
+
+service AuditService {
+  rpc RecordEvent(RecordEventRequest) returns (RecordEventResponse);
+  rpc GetEvents(GetEventsRequest) returns (GetEventsResponse);
+}
+
+message RecordEventRequest {
+  string source = 1;
+  string event_type = 2;
+  string severity = 3;
+  string actor = 4;
+  string action = 5;
+  string resource = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+  string trace_id = 8;
+  map<string, string> metadata = 9;
+}
+
+message RecordEventResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message GetEventsRequest {
+  string source = 1;
+  google.protobuf.Timestamp since = 2;
+  int32 limit = 3;
+}
+
+message GetEventsResponse {
+  repeated AuditEvent events = 1;
+}
+
+message AuditEvent {
+  string id = 1;
+  string source = 2;
+  string event_type = 3;
+  string severity = 4;
+  string actor = 5;
+  string action = 6;
+  string resource = 7;
+  google.protobuf.Timestamp occurred_at = 8;
+  string trace_id = 9;
+}

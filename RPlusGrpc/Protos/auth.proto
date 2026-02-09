@@ -1,0 +1,299 @@
+syntax = "proto3";
+
+option csharp_namespace = "RPlusGrpc.Auth";
+
+package rplus.auth;
+
+// Auth Key Service - provides public keys for JWT validation
+service AuthKeyService {
+  // Get current active public keys for JWT signature verification
+  rpc GetPublicKeys(GetPublicKeysRequest) returns (GetPublicKeysResponse);
+}
+
+// Main Auth Service for internal communication
+service AuthService {
+  // --- Bootstrap / System ---
+  rpc BootstrapStatus(BootstrapStatusRequest) returns (BootstrapStatusResponse);
+  rpc BootstrapInitialize(BootstrapInitializeRequest) returns (BootstrapInitializeResponse);
+  rpc BootstrapLogin(BootstrapLoginRequest) returns (BootstrapLoginResponse);
+  rpc BootstrapUnlock(BootstrapUnlockRequest) returns (BootstrapUnlockResponse);
+
+  // --- Standard Auth ---
+  rpc LoginWithPassword(LoginWithPasswordRequest) returns (LoginResponse);
+  rpc RequestOtp(RequestOtpRequest) returns (RequestOtpResponse);
+  rpc VerifyOtp(VerifyOtpRequest) returns (LoginResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc IdentifyUser(IdentifyUserRequest) returns (IdentifyUserResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc ListAuthUsers(ListAuthUsersRequest) returns (ListAuthUsersResponse);
+
+  // --- System Admin Wizard (cookie-first UX) ---
+  rpc SystemAdminChangePassword(SystemAdminChangePasswordRequest) returns (SystemAdminStepResponse);
+  rpc SystemAdminUpdateProfile(SystemAdminUpdateProfileRequest) returns (SystemAdminStepResponse);
+  rpc SystemAdminSetRecoveryEmail(SystemAdminSetRecoveryEmailRequest) returns (SystemAdminStepResponse);
+  rpc SystemAdminSetup2fa(SystemAdminSetup2faRequest) returns (SystemAdminStepResponse);
+  rpc SystemAdminVerify2fa(SystemAdminVerify2faRequest) returns (SystemAdminStepResponse);
+  rpc SystemAdminVerifyTotp(SystemAdminVerifyTotpRequest) returns (SystemAdminStepResponse);
+  rpc SystemAdminRecoveryInit(SystemAdminRecoveryInitRequest) returns (SystemAdminStepResponse);
+  rpc SystemAdminRecoveryVerify(SystemAdminRecoveryVerifyRequest) returns (SystemAdminStepResponse);
+
+  // --- User Management ---
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc TerminateUser(TerminateUserRequest) returns (TerminateUserResponse);
+}
+
+// --- Messages ---
+
+message GetPublicKeysRequest {}
+
+message GetPublicKeysResponse {
+  repeated PublicKeyInfo keys = 1;
+}
+
+message PublicKeyInfo {
+  string kid = 1;
+  string algorithm = 2;
+  string pem = 3;
+  int64 expires_at = 4;
+  string use = 5;
+}
+
+// Bootstrap
+message BootstrapStatusRequest {}
+message BootstrapStatusResponse {
+  bool is_initialized = 1;
+  bool is_locked = 2;
+  string version = 3;
+}
+
+message BootstrapInitializeRequest {
+  string initial_admin_email = 1;
+  string initial_admin_password = 2;
+  string initial_admin_password_confirm = 3;
+  string recovery_words = 4;
+  string challenge_id = 5;
+  string nonce = 6;
+}
+
+message BootstrapInitializeResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message BootstrapLoginRequest {
+  string login = 1;
+  string password = 2;
+  string device_id = 3;
+  string challenge_id = 4;
+  string nonce = 5;
+}
+
+message BootstrapLoginResponse {
+  bool success = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  string error = 4;
+  int32 retry_after_seconds = 5;
+}
+
+message BootstrapUnlockRequest {
+  string master_key = 1;
+}
+
+message BootstrapUnlockResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+// User Auth
+message LoginWithPasswordRequest {
+  string login = 1;
+  string password = 2;
+  string client_ip = 3;
+  string user_agent = 4;
+  string device_id = 5;
+  string challenge_id = 6;
+  string nonce = 7;
+}
+
+message LoginResponse {
+  bool success = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  string error = 4;
+  int32 retry_after_seconds = 5;
+  string user_id = 6;
+  string next_action = 7;         // CHANGE_PASSWORD | SETUP_EMAIL | SETUP_2FA | ENTER_TOTP
+  string temp_token = 8;          // opaque, short-lived token for wizard endpoints
+  string recovery_email_mask = 9; // e.g. b***@example.com
+}
+
+// --- System Admin Wizard ---
+message SystemAdminChangePasswordRequest {
+  string temp_token = 1;
+  string new_password = 2;
+}
+
+message SystemAdminUpdateProfileRequest {
+  string temp_token = 1;
+  // Optional. When provided, updates system user's login (normalized to lowercase).
+  string login = 2;
+  // Optional. When provided, updates recovery email (no out-of-band confirmation in MVP).
+  string recovery_email = 3;
+}
+
+message SystemAdminSetRecoveryEmailRequest {
+  string temp_token = 1;
+  string email = 2;
+  // Optional. When omitted, server generates and logs a confirmation code (dev-mode) and returns success=true
+  // without advancing the wizard. When provided, server verifies it and advances to the next step.
+  string code = 3;
+}
+
+message SystemAdminSetup2faRequest {
+  string temp_token = 1;
+}
+
+message SystemAdminVerify2faRequest {
+  string temp_token = 1;
+  string code = 2;
+}
+
+message SystemAdminVerifyTotpRequest {
+  string temp_token = 1;
+  string code = 2;
+}
+
+message SystemAdminRecoveryInitRequest {
+  string temp_token = 1;
+}
+
+message SystemAdminRecoveryVerifyRequest {
+  string temp_token = 1;
+  string code = 2;
+}
+
+message SystemAdminStepResponse {
+  bool success = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  string error = 4;
+  string next_action = 5;
+  string temp_token = 6;
+  string recovery_email_mask = 7;
+  string otpauth_uri = 8;
+  string debug_code = 9; // dev-only (optional)
+  string user_id = 10;
+}
+
+message RequestOtpRequest {
+  string phone = 1;
+  string device_id = 2;
+  string client_ip = 3;
+  string user_agent = 4;
+  string channel = 5;
+}
+
+message RequestOtpResponse {
+  bool sent = 1;
+  int32 retry_after_seconds = 2;
+  string debug_code = 3;
+  string error = 4;
+  bool user_exists = 5;
+  string selected_channel = 6;
+}
+
+message VerifyOtpRequest {
+  string phone = 1;
+  string code = 2;
+  string device_id = 3;
+  string device_public_key = 4;
+  string client_ip = 5;
+  string user_agent = 6;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+  string device_id = 2;
+  string device_public_key = 3;
+  string client_ip = 4;
+  string user_agent = 5;
+}
+
+message RefreshTokenResponse {
+  bool success = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  string error = 4;
+  int32 expires_in = 5;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+  string device_id = 2;
+}
+
+// --- Identify User ---
+message IdentifyUserRequest {
+  string identifier = 1; // login, email, or phone
+  string client_ip = 2;
+  string user_agent = 3;
+}
+
+message IdentifyUserResponse {
+  bool exists = 1;
+  string auth_method = 2; // "password" or "otp"
+  bool is_blocked = 3;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+// --- List Auth Users ---
+message ListAuthUsersRequest {
+  repeated string user_ids = 1;
+}
+
+message ListAuthUsersResponse {
+  repeated AuthUserInfo users = 1;
+}
+
+message AuthUserInfo {
+  string user_id = 1;
+  string login = 2;
+  string email = 3;
+  string phone_hash = 4;
+  bool is_blocked = 5;
+  bool is_active = 6;
+}
+
+// --- User Management Messages ---
+message CreateUserRequest {
+  string login = 1;
+  string email = 2;
+  string phone = 3;
+  string password = 4;
+  string first_name = 5;
+  string last_name = 6;
+  string middle_name = 7;
+  int32 user_type = 8; // 1 = Platform, 2 = Staff
+  string tenant_id = 9;
+}
+
+message CreateUserResponse {
+  bool success = 1;
+  string user_id = 2;
+  string error_code = 3;
+}
+
+// --- Terminate User (soft-delete / employee dismissal) ---
+message TerminateUserRequest {
+  string user_id = 1;
+  string reason = 2; // optional termination reason
+}
+
+message TerminateUserResponse {
+  bool success = 1;
+  string error_code = 2;
+}

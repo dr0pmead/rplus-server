@@ -25,7 +25,7 @@ x-vault-env: &vault-env
   ASPNETCORE_ENVIRONMENT: Production
 
 x-kernel-build: &kernel-build
-  context: ..
+  context: .
 
 networks:
   kernel-internal:
@@ -173,7 +173,7 @@ services:
   rplus-kernel-auth:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Auth/Dockerfile
+      dockerfile: src/RPlus.Kernel.Auth/Dockerfile
     container_name: rplus-kernel-auth
     environment:
       <<: *vault-env
@@ -201,7 +201,7 @@ services:
   rplus-kernel-access:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Access/Dockerfile
+      dockerfile: src/RPlus.Kernel.Access/Dockerfile
     container_name: rplus-kernel-access
     environment:
       <<: *vault-env
@@ -225,7 +225,7 @@ services:
   rplus-kernel-audit:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Audit/Dockerfile
+      dockerfile: src/RPlus.Kernel.Audit/Dockerfile
     container_name: rplus-kernel-audit
     environment:
       <<: *vault-env
@@ -245,7 +245,7 @@ services:
   rplus-kernel-organization:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Organization/Dockerfile
+      dockerfile: src/RPlus.Kernel.Organization/Dockerfile
     container_name: rplus-kernel-organization
     environment:
       <<: *vault-env
@@ -274,7 +274,7 @@ services:
   rplus-kernel-hr:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.HR/Dockerfile
+      dockerfile: src/RPlus.Kernel.HR/Dockerfile
     container_name: rplus-kernel-hr
     environment:
       <<: *vault-env
@@ -297,7 +297,7 @@ services:
   rplus-kernel-documents:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Documents/Dockerfile
+      dockerfile: src/RPlus.Kernel.Documents/Dockerfile
     container_name: rplus-kernel-documents
     environment:
       <<: *vault-env
@@ -323,7 +323,7 @@ services:
   rplus-kernel-meta:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Meta/Dockerfile
+      dockerfile: src/RPlus.Kernel.Meta/Dockerfile
     container_name: rplus-kernel-meta
     environment:
       <<: *vault-env
@@ -346,7 +346,7 @@ services:
   rplus-kernel-runtime:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Runtime/Dockerfile
+      dockerfile: src/RPlus.Kernel.Runtime/Dockerfile
     container_name: rplus-kernel-runtime
     environment:
       <<: *vault-env
@@ -365,7 +365,7 @@ services:
   rplus-kernel-loyalty:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Loyalty/Dockerfile
+      dockerfile: src/RPlus.Kernel.Loyalty/Dockerfile
     container_name: rplus-kernel-loyalty
     environment:
       <<: *vault-env
@@ -405,7 +405,7 @@ services:
   rplus-kernel-wallet:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Wallet/Dockerfile
+      dockerfile: src/RPlus.Kernel.Wallet/Dockerfile
     container_name: rplus-kernel-wallet
     environment:
       <<: *vault-env
@@ -429,7 +429,7 @@ services:
   rplus-kernel-walletadapter:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.WalletAdapter/Dockerfile
+      dockerfile: src/RPlus.WalletAdapter/Dockerfile
     container_name: rplus-kernel-walletadapter
     environment:
       <<: *vault-env
@@ -451,7 +451,7 @@ services:
   rplus-kernel-guard:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Guard/Dockerfile
+      dockerfile: src/RPlus.Kernel.Guard/Dockerfile
     container_name: rplus-kernel-guard
     environment:
       <<: *vault-env
@@ -474,7 +474,7 @@ services:
   rplus-kernel-integration:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Integration/Dockerfile
+      dockerfile: src/RPlus.Kernel.Integration/Dockerfile
     container_name: rplus-kernel-integration
     environment:
       <<: *vault-env
@@ -505,7 +505,7 @@ services:
   rplus-kernel-gateway:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Gateway/Dockerfile
+      dockerfile: src/RPlus.Kernel.Gateway/Dockerfile
     container_name: rplus-kernel-gateway
     environment:
       <<: *vault-env
@@ -551,7 +551,7 @@ services:
   rplus-kernel-users:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Users/Dockerfile
+      dockerfile: src/RPlus.Kernel.Users/Dockerfile
     container_name: rplus-kernel-users
     environment:
       <<: *vault-env
@@ -582,7 +582,7 @@ services:
   rplus-hunter:
     build:
       <<: *kernel-build
-      dockerfile: RPlus.Kernel/src/RPlus.Kernel.Hunter/Dockerfile
+      dockerfile: src/RPlus.Kernel.Hunter/Dockerfile
     container_name: rplus-hunter
     environment:
       <<: *vault-env

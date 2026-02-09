@@ -9,11 +9,11 @@ COPY nuget.config* ./
 COPY LocalPackages/ LocalPackages/
 COPY RPlus.SDK/ RPlus.SDK/
 COPY RPlusGrpc/ RPlusGrpc/
-COPY RPlus.Kernel/src/ RPlus.Kernel/src/
-RUN dotnet restore RPlus.Kernel/src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Api/RPlus.Wallet.Api.csproj
+COPY src/ src/
+RUN dotnet restore src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Api/RPlus.Wallet.Api.csproj
 RUN dotnet build RPlus.SDK/RPlus.SDK.Contracts/RPlus.SDK.Contracts.csproj -c Release --no-restore || true
 RUN dotnet build RPlusGrpc/RPlusGrpc.csproj -c Release --no-restore || true
-RUN dotnet publish RPlus.Kernel/src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Api/RPlus.Wallet.Api.csproj -c Release -o /app/publish
+RUN dotnet publish src/RPlus.Kernel.Wallet/src/RPlus.Wallet.Api/RPlus.Wallet.Api.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
 RUN addgroup -S rplus && adduser -S rplus -G rplus

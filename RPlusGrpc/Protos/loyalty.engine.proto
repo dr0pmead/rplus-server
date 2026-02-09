@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+package rplus.loyalty.engine;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "rplus/loyalty/engine;engine";
+option csharp_namespace = "RPlusGrpc.Loyalty.Engine";
+option java_multiple_files = true;
+option java_package = "com.rplus.loyalty.engine";
+option java_outer_classname = "LoyaltyEngineProto";
+
+service LoyaltyEngineService {
+  // Execute a rule by its id
+  rpc ExecuteRule(ExecuteRuleRequest) returns (ExecuteRuleResponse);
+
+  // Simulate / validate rule without side effects
+  rpc ValidateRule(ValidateRuleRequest) returns (ValidateRuleResponse);
+
+  // Execute an ad-hoc rule payload (for testing / quick runs)
+  rpc ExecuteAdHoc(ExecuteAdHocRequest) returns (ExecuteAdHocResponse);
+  
+  // Simulate execution of multiple rules
+  rpc SimulateRules(ExecuteRulesRequest) returns (ExecuteRulesResponse);
+}
+
+// =========================
+// Execute Rule
+// =========================
+
+message ExecuteRuleRequest {
+  string rule_id = 1;
+  google.protobuf.Struct context = 2; // user, partner, event payload, etc
+  string correlation_id = 3;
+  string actor_id = 4;
+}
+
+message ExecuteRuleResponse {
+  bool success = 1;
+  string rule_id = 2;
+  string execution_id = 3;
+  ExecutionResult result = 4;
+  repeated ActionResult actions = 5;
+  string error_message = 6;
+}
+
+message ExecutionResult {
+  bool passed = 1;
+  string status = 2; // PASSED/FAILED/ERROR
+  google.protobuf.Struct metadata = 3;
+  repeated ConditionCheck conditions = 4;
+}
+
+message ConditionCheck {
+  string condition_id = 1;
+  bool result = 2;
+}
+
+// =========================
+// Validate Rule
+// =========================
+
+message ValidateRuleRequest {
+  string rule_id = 1;
+}
+
+message ValidateRuleResponse {
+  bool valid = 1;
+  string rule_id = 2;
+  repeated string errors = 3;
+  google.protobuf.Struct summary = 4;
+}
+
+// =========================
+// Ad-hoc execution
+// =========================
+
+message ExecuteAdHocRequest {
+  RuleDefinition rule = 1;
+  google.protobuf.Struct context = 2;
+  string correlation_id = 3;
+  string actor_id = 4;
+}
+
+message ExecuteAdHocResponse {
+  bool success = 1;
+  ExecutionResult result = 2;
+  repeated ActionResult actions = 3;
+  string error_message = 4;
+}
+
+// =========================
+// Rule definition
+// =========================
+
+message RuleDefinition {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated ConditionDefinition conditions = 4;
+  repeated ActionDefinition actions = 5;
+  RulePriority priority = 6;
+}
+
+enum RulePriority {
+  PRIORITY_UNSPECIFIED = 0;
+  LOW = 1;
+  MEDIUM = 2;
+  HIGH = 3;
+}
+
+// =========================
+// Conditions
+// =========================
+
+message ConditionDefinition {
+  string id = 1;
+  string type = 2; // example: "user.tenure", "purchase.amount"
+  google.protobuf.Struct parameters = 3;
+  ConditionOperator operator = 4;
+  google.protobuf.Value value = 5;
+}
+
+enum ConditionOperator {
+  OP_UNSPECIFIED = 0;
+  EQUALS = 1;
+  NOT_EQUALS = 2;
+  GREATER_THAN = 3;
+  LESS_THAN = 4;
+  IN = 5;
+  NOT_IN = 6;
+  EXISTS = 7;
+  NOT_EXISTS = 8;
+}
+
+// =========================
+// Actions
+// =========================
+
+message ActionDefinition {
+  string id = 1;
+  string type = 2; // example: "points.accrual", "discount.apply"
+  google.protobuf.Struct parameters = 3;
+}
+
+message ActionResult {
+  string action_id = 1;
+  string action_type = 2;
+  bool success = 3;
+  string message = 4;
+  google.protobuf.Struct output = 5;
+}
+
+// =========================
+// Ad-hoc batch execution
+// =========================
+message ExecuteRulesRequest {
+  repeated string rule_ids = 1;
+  google.protobuf.Struct context = 2;
+  string correlation_id = 3;
+  string actor_id = 4;
+}
+
+message ExecuteRulesResponse {
+  bool success = 1;
+  string execution_id = 2;
+  repeated RuleExecution executions = 3;
+}
+
+message RuleExecution {
+  string rule_id = 1;
+  ExecutionResult result = 2;
+  repeated ActionResult actions = 3;
+  string error_message = 4;
+}

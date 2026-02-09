@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package rplus.access;
+
+option go_package = "rplus/access;access";
+option csharp_namespace = "RPlusGrpc.Access";
+option java_multiple_files = true;
+
+service AccessService {
+  rpc CheckPermission (CheckPermissionRequest) returns (CheckPermissionResponse);
+  rpc GetEffectiveRights (GetEffectiveRightsRequest) returns (GetEffectiveRightsResponse);
+  rpc GetPermissions (Empty) returns (PermissionsList);
+  rpc ActivatePermission (ActivatePermissionRequest) returns (Empty);
+  rpc RegisterPermission (RegisterPermissionRequest) returns (Empty);
+  rpc UpsertPermissionManifest (UpsertPermissionManifestRequest) returns (UpsertPermissionManifestResponse);
+  
+  rpc GetIntegrationPermissions (GetIntegrationPermissionsRequest) returns (GetIntegrationPermissionsResponse);
+  rpc GrantIntegrationPermission (GrantIntegrationPermissionRequest) returns (Empty);
+  rpc RevokeIntegrationPermission (RevokeIntegrationPermissionRequest) returns (Empty);
+}
+
+message Empty {}
+
+message CheckPermissionRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string permission_id = 3;
+  string application_id = 4;
+  string context = 5;
+}
+
+message CheckPermissionResponse {
+  bool is_allowed = 1;
+  string reason = 2;
+  string scope = 3;
+}
+
+message GetEffectiveRightsRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string context = 3;
+}
+
+message GetEffectiveRightsResponse {
+  string permissions_json = 1;
+  int64 version = 2;
+}
+
+message PermissionsList {
+  repeated PermissionDto permissions = 1;
+}
+
+message PermissionDto {
+  string permission_id = 1;
+  string application_id = 2;
+  bool is_active = 3;
+}
+
+message ActivatePermissionRequest {
+  string permission_id = 1;
+  string application_id = 2;
+}
+
+message RegisterPermissionRequest {
+  string permission_id = 1;
+  string application_id = 2;
+  repeated string supported_contexts = 3;
+}
+
+message UpsertPermissionManifestRequest {
+  // Logical service name (e.g. "wallet", "loyalty"). Used as a source marker for deprecation.
+  string service_name = 1;
+  // Logical application code (e.g. "web-admin-ui", "mobile"). Stored as App.Code in Access DB.
+  string application_id = 2;
+  repeated PermissionManifestEntry permissions = 3;
+  // If true, permissions previously published by this service but missing in this request are marked DEPRECATED.
+  bool mark_missing_as_deprecated = 4;
+}
+
+message PermissionManifestEntry {
+  string permission_id = 1;
+  string title = 2;
+  string description = 3;
+  repeated string supported_contexts = 4;
+}
+
+message UpsertPermissionManifestResponse {
+  int32 upserted = 1;
+  int32 deprecated = 2;
+}
+
+message GetIntegrationPermissionsRequest {
+  string api_key_id = 1;
+  map<string, string> context_signals = 2;
+}
+
+message GetIntegrationPermissionsResponse {
+  bool success = 1;
+  string error = 2;
+  IntegrationDecision decision = 3;
+  repeated string permissions = 4;
+}
+
+enum IntegrationDecision {
+  ALLOWED = 0;
+  DENIED_POLICY = 1;
+  DENIED_NOT_FOUND = 2;
+}
+
+message GrantIntegrationPermissionRequest {
+  string api_key_id = 1;
+  string permission_id = 2;
+}
+
+message RevokeIntegrationPermissionRequest {
+  string api_key_id = 1;
+  string permission_id = 2;
+}

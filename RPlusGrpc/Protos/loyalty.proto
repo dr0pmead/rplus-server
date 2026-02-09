@@ -1,0 +1,448 @@
+syntax = "proto3";
+
+package rplus.loyalty;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "rplus/loyalty;loyalty";
+option csharp_namespace = "RPlusGrpc.Loyalty";
+option java_multiple_files = true;
+option java_package = "com.rplus.loyalty";
+option java_outer_classname = "LoyaltyProto";
+
+service LoyaltyService {
+  // Rules
+  rpc ListRules(ListRulesRequest) returns (ListRulesResponse);
+  rpc GetRule(GetRuleRequest) returns (Rule);
+  rpc CreateRule(CreateRuleRequest) returns (Rule);
+  rpc UpdateRule(UpdateRuleRequest) returns (Rule);
+  rpc DeleteRule(DeleteRuleRequest) returns (google.protobuf.Empty);
+
+  // Triggers
+  rpc ListTriggers(ListTriggersRequest) returns (ListTriggersResponse);
+  rpc GetTrigger(GetTriggerRequest) returns (Trigger);
+  rpc CreateTrigger(CreateTriggerRequest) returns (Trigger);
+  rpc UpdateTrigger(UpdateTriggerRequest) returns (Trigger);
+  rpc DeleteTrigger(DeleteTriggerRequest) returns (google.protobuf.Empty);
+
+  // Conditions
+  rpc ListConditions(ListConditionsRequest) returns (ListConditionsResponse);
+  rpc GetCondition(GetConditionRequest) returns (Condition);
+  rpc CreateCondition(CreateConditionRequest) returns (Condition);
+  rpc UpdateCondition(UpdateConditionRequest) returns (Condition);
+  rpc DeleteCondition(DeleteConditionRequest) returns (google.protobuf.Empty);
+
+  // Actions
+  rpc ListActions(ListActionsRequest) returns (ListActionsResponse);
+  rpc GetAction(GetActionRequest) returns (Action);
+  rpc CreateAction(CreateActionRequest) returns (Action);
+  rpc UpdateAction(UpdateActionRequest) returns (Action);
+  rpc DeleteAction(DeleteActionRequest) returns (google.protobuf.Empty);
+
+  // Settings
+  rpc ListSettings(ListSettingsRequest) returns (ListSettingsResponse);
+  rpc GetSetting(GetSettingRequest) returns (Setting);
+  rpc UpdateSetting(UpdateSettingRequest) returns (Setting);
+
+  // Audit
+  rpc ListAudit(ListAuditRequest) returns (ListAuditResponse);
+  rpc GetAudit(GetAuditRequest) returns (AuditRecord);
+
+  // Simulation
+  rpc RunSimulation(SimulationRequest) returns (SimulationResponse);
+  
+  // Profile
+  rpc CreateProfile(CreateProfileRequest) returns (CreateProfileResponse);
+  
+  // Tenure Level Recalculation (single user)
+  rpc RecalculateUserTenure(RecalculateUserTenureRequest) returns (RecalculateUserTenureResponse);
+}
+
+message CreateProfileRequest {
+  string user_id = 1;
+  string level = 2; // e.g. "base"
+  double discount = 3;
+  double motivational_discount = 4;
+}
+
+message CreateProfileResponse {
+  string id = 1;
+  string user_id = 2;
+}
+
+message RecalculateUserTenureRequest {
+  string user_id = 1;
+}
+
+message RecalculateUserTenureResponse {
+  bool success = 1;
+  string level = 2;        // assigned level key (e.g. "silver")
+  double discount = 3;     // assigned discount
+  bool updated = 4;        // true if level was changed
+  string error = 5;        // error message if failed
+}
+
+// =========================
+// Common
+// =========================
+
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message Meta {
+  string request_id = 1;
+  string actor_id = 2;
+}
+
+enum EntityStatus {
+  STATUS_UNSPECIFIED = 0;
+  ENABLED = 1;
+  DISABLED = 2;
+}
+
+enum RulePriority {
+  PRIORITY_UNSPECIFIED = 0;
+  LOW = 1;
+  MEDIUM = 2;
+  HIGH = 3;
+}
+
+// =========================
+// Rule
+// =========================
+
+message Rule {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  EntityStatus status = 4;
+  RulePriority priority = 5;
+
+  string trigger_id = 6;
+  repeated string condition_ids = 7;
+  repeated string action_ids = 8;
+
+  int32 version = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message ListRulesRequest {
+  Pagination pagination = 1;
+  string query = 2;
+  EntityStatus status = 3;
+}
+
+message ListRulesResponse {
+  repeated Rule rules = 1;
+  int32 total = 2;
+}
+
+message GetRuleRequest {
+  string id = 1;
+}
+
+message CreateRuleRequest {
+  string name = 1;
+  string description = 2;
+  EntityStatus status = 3;
+  RulePriority priority = 4;
+  string trigger_id = 5;
+  repeated string condition_ids = 6;
+  repeated string action_ids = 7;
+}
+
+message UpdateRuleRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  EntityStatus status = 4;
+  RulePriority priority = 5;
+  string trigger_id = 6;
+  repeated string condition_ids = 7;
+  repeated string action_ids = 8;
+  int32 version = 9;
+}
+
+message DeleteRuleRequest {
+  string id = 1;
+}
+
+// =========================
+// Trigger
+// =========================
+
+message Trigger {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  EntityStatus status = 4;
+
+  string event_name = 5;
+  google.protobuf.Struct payload_schema = 6;
+
+  int32 version = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message ListTriggersRequest {
+  Pagination pagination = 1;
+  string query = 2;
+  EntityStatus status = 3;
+}
+
+message ListTriggersResponse {
+  repeated Trigger triggers = 1;
+  int32 total = 2;
+}
+
+message GetTriggerRequest {
+  string id = 1;
+}
+
+message CreateTriggerRequest {
+  string name = 1;
+  string description = 2;
+  EntityStatus status = 3;
+  string event_name = 4;
+  google.protobuf.Struct payload_schema = 5;
+}
+
+message UpdateTriggerRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  EntityStatus status = 4;
+  string event_name = 5;
+  google.protobuf.Struct payload_schema = 6;
+  int32 version = 7;
+}
+
+message DeleteTriggerRequest {
+  string id = 1;
+}
+
+// =========================
+// Condition
+// =========================
+
+enum ConditionOperator {
+  OPERATOR_UNSPECIFIED = 0;
+  AND = 1;
+  OR = 2;
+  NOT = 3;
+}
+
+message Condition {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  EntityStatus status = 4;
+
+  ConditionOperator operator = 5;
+  repeated string operand_condition_ids = 6;
+  google.protobuf.Struct expression = 7;
+
+  int32 version = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message ListConditionsRequest {
+  Pagination pagination = 1;
+  string query = 2;
+  EntityStatus status = 3;
+}
+
+message ListConditionsResponse {
+  repeated Condition conditions = 1;
+  int32 total = 2;
+}
+
+message GetConditionRequest {
+  string id = 1;
+}
+
+message CreateConditionRequest {
+  string name = 1;
+  string description = 2;
+  EntityStatus status = 3;
+  ConditionOperator operator = 4;
+  repeated string operand_condition_ids = 5;
+  google.protobuf.Struct expression = 6;
+}
+
+message UpdateConditionRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  EntityStatus status = 4;
+  ConditionOperator operator = 5;
+  repeated string operand_condition_ids = 6;
+  google.protobuf.Struct expression = 7;
+  int32 version = 8;
+}
+
+message DeleteConditionRequest {
+  string id = 1;
+}
+
+// =========================
+// Action
+// =========================
+
+enum ActionType {
+  ACTION_UNSPECIFIED = 0;
+  ADD_POINTS = 1;
+  SET_LEVEL = 2;
+  ADD_TAG = 3;
+  SEND_NOTIFICATION = 4;
+  CALL_WEBHOOK = 5;
+  CUSTOM = 6;
+}
+
+message Action {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  EntityStatus status = 4;
+
+  ActionType type = 5;
+  google.protobuf.Struct params = 6;
+
+  int32 version = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message ListActionsRequest {
+  Pagination pagination = 1;
+  string query = 2;
+  EntityStatus status = 3;
+}
+
+message ListActionsResponse {
+  repeated Action actions = 1;
+  int32 total = 2;
+}
+
+message GetActionRequest {
+  string id = 1;
+}
+
+message CreateActionRequest {
+  string name = 1;
+  string description = 2;
+  EntityStatus status = 3;
+  ActionType type = 4;
+  google.protobuf.Struct params = 5;
+}
+
+message UpdateActionRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  EntityStatus status = 4;
+  ActionType type = 5;
+  google.protobuf.Struct params = 6;
+  int32 version = 7;
+}
+
+message DeleteActionRequest {
+  string id = 1;
+}
+
+// =========================
+// Settings
+// =========================
+
+message Setting {
+  string key = 1;
+  string value = 2;
+  string description = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message ListSettingsRequest {
+  Pagination pagination = 1;
+  string query = 2;
+}
+
+message ListSettingsResponse {
+  repeated Setting settings = 1;
+  int32 total = 2;
+}
+
+message GetSettingRequest {
+  string key = 1;
+}
+
+message UpdateSettingRequest {
+  string key = 1;
+  string value = 2;
+}
+
+// =========================
+// Audit
+// =========================
+
+enum AuditType {
+  AUDIT_UNSPECIFIED = 0;
+  CREATE = 1;
+  UPDATE = 2;
+  DELETE = 3;
+}
+
+message AuditRecord {
+  string id = 1;
+  AuditType type = 2;
+  string entity = 3;
+  string entity_id = 4;
+  string actor_id = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Struct before = 7;
+  google.protobuf.Struct after = 8;
+  string reason = 9;
+}
+
+message ListAuditRequest {
+  Pagination pagination = 1;
+  string query = 2;
+  string entity = 3;
+  string entity_id = 4;
+  AuditType type = 5;
+}
+
+message ListAuditResponse {
+  repeated AuditRecord records = 1;
+  int32 total = 2;
+}
+
+message GetAuditRequest {
+  string id = 1;
+}
+
+// =========================
+// Simulation
+// =========================
+
+message SimulationRequest {
+  string trigger_id = 1;
+  google.protobuf.Struct payload = 2;
+}
+
+message SimulationResult {
+  bool matched = 1;
+  repeated string matched_rule_ids = 2;
+  repeated string executed_action_ids = 3;
+  google.protobuf.Struct debug = 4;
+}
+
+message SimulationResponse {
+  SimulationResult result = 1;
+}

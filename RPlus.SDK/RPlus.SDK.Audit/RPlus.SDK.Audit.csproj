@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Version>$(RPlusSdkVersion)</Version>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RPlus.SDK.Core\RPlus.SDK.Core.csproj" />
+    <ProjectReference Include="..\RPlus.SDK.Eventing\RPlus.SDK.Eventing.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MediatR.Contracts" />
+  </ItemGroup>
+</Project>

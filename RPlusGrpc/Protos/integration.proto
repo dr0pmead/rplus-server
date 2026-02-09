@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package rplus.integration.v1;
+
+option csharp_namespace = "RPlusGrpc.Integration";
+
+// Integration Service - Internal gRPC API for external request proxying
+// Gateway is the ONLY service that calls this. SDK never calls Integration directly.
+service IntegrationService {
+  // Health check endpoint
+  rpc Ping (PingRequest) returns (PingResponse);
+
+  // Validate API Key (integration owns keys now)
+  rpc ValidateKey (ValidateKeyRequest) returns (ValidateKeyResponse);
+
+  // Proxy external API call to internal services
+  // Gateway handles auth, context validation, and permission checks BEFORE calling this
+  rpc ProxyCall (ProxyCallRequest) returns (ProxyCallResponse);
+}
+
+message ValidateKeyRequest {
+  string key = 1;
+  string secret = 2;
+}
+
+message ValidateKeyResponse {
+  bool success = 1;
+  string api_key_id = 2;
+  string partner_id = 3;
+  bool is_discount_partner = 4;
+  string status = 5;
+  string error = 6;
+}
+
+message PingRequest {}
+
+message PingResponse {
+  string message = 1;
+  string trace_id = 2;
+}
+
+message ProxyCallRequest {
+  string endpoint = 1;
+  string method = 2;
+  bytes body = 3;
+  map<string, string> headers = 4;
+  string trace_id = 5;
+  IntegrationContext context = 6;
+}
+
+message ProxyCallResponse {
+  int32 status_code = 1;
+  bytes body = 2;
+  map<string, string> headers = 3;
+  string trace_id = 4;
+  string error = 5;
+}
+
+message IntegrationContext {
+  string api_key_id = 1;
+  string partner_id = 2;
+  repeated string permissions = 3;
+  bool is_discount_partner = 4;
+  string trace_id = 5;
+  string context = 6;
+  string tenant_id = 7;
+  string user_id = 8;
+}

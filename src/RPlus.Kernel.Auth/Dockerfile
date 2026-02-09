@@ -1,6 +1,6 @@
 # RPlus.Kernel.Auth — Authentication Service
 # Protocols: HTTP (5006) + gRPC (5007)
-# docker build -f RPlus.Kernel/src/RPlus.Kernel.Auth/Dockerfile -t rplus-kernel-auth ..
+# docker build -f src/RPlus.Kernel.Auth/Dockerfile -t rplus-kernel-auth ..
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
@@ -12,12 +12,12 @@ COPY nuget.config* ./
 COPY LocalPackages/ LocalPackages/
 COPY RPlus.SDK/ RPlus.SDK/
 COPY RPlusGrpc/ RPlusGrpc/
-COPY RPlus.Kernel/src/ RPlus.Kernel/src/
+COPY src/ src/
 
-RUN dotnet restore RPlus.Kernel/src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj
+RUN dotnet restore src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj
 RUN dotnet build RPlus.SDK/RPlus.SDK.Contracts/RPlus.SDK.Contracts.csproj -c Release --no-restore || true
 RUN dotnet build RPlusGrpc/RPlusGrpc.csproj -c Release --no-restore || true
-RUN dotnet publish RPlus.Kernel/src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj -c Release -o /app/publish
+RUN dotnet publish src/RPlus.Kernel.Auth/src/RPlus.Auth.API/RPlus.Auth.API.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
 RUN addgroup -S rplus && adduser -S rplus -G rplus

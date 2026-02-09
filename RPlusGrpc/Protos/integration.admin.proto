@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package rplus.integration.admin.v1;
+
+option csharp_namespace = "RPlusGrpc.Integration.Admin";
+
+import "google/protobuf/timestamp.proto";
+
+service IntegrationAdminService {
+  rpc ListPartners(ListPartnersRequest) returns (ListPartnersResponse);
+  rpc GetPartner(GetPartnerRequest) returns (PartnerDto);
+  rpc EnsurePartner(EnsurePartnerRequest) returns (PartnerDto);
+  rpc CreateApiKey(CreateApiKeyRequest) returns (CreateApiKeyResponse);
+}
+
+message ListPartnersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string search = 3;
+}
+
+message ListPartnersResponse {
+  int64 total_count = 1;
+  repeated PartnerDto items = 2;
+}
+
+message GetPartnerRequest {
+  string id = 1;
+}
+
+message PartnerDto {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  bool is_discount_partner = 4;
+  bool is_active = 5;
+  google.protobuf.Timestamp created_at = 6;
+  int32 api_key_count = 7;
+}
+
+message EnsurePartnerRequest {
+  // Optional. If omitted, a new partner is created with a generated id.
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  bool is_discount_partner = 4;
+}
+
+message CreateApiKeyRequest {
+  string partner_id = 1;
+  string environment = 2; // "test" | "live"
+  google.protobuf.Timestamp expires_at = 3;
+  bool require_signature = 4;
+}
+
+message CreateApiKeyResponse {
+  string api_key_id = 1;
+  string partner_id = 2;
+  string full_key = 3; // prefix + apiKeyRaw (for X-Integration-Key header, shown once)
+  string status = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  string hmac_secret = 7; // separate HMAC signing secret (for X-Signature, shown once)
+}

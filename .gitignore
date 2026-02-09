@@ -44,3 +44,13 @@ ehthumbs.db
 TestResults/
 coverage/
 *.trx
+
+# ─── Copied Dependencies (nested .git) ───────────────────────────────────────
+RPlus.SDK/.git/
+RPlus.SDK/.vs/
+RPlus.SDK/**/bin/
+RPlus.SDK/**/obj/
+RPlusGrpc/.git/
+RPlusGrpc/bin/
+RPlusGrpc/obj/
+

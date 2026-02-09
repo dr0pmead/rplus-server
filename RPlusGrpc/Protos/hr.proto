@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package rplus.hr;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "RPlusGrpc.Hr";
+
+message GetEmployeeVitalStatsRequest {
+  string user_id = 1;
+}
+
+message EmployeeVitalStatsResponse {
+  int32 tenure_days = 1;
+  bool is_birthday_today = 2;
+}
+
+message GetVitalStatsRequest {
+  string user_id = 1;
+}
+
+message VitalStatsResponse {
+  int32 tenure_days = 1;
+  bool is_birthday_today = 2;
+  bool has_disability = 3;
+  int32 children_count = 4;
+}
+
+message GetProfileByIinRequest {
+  string iin = 1;
+}
+
+message ProfileByIinResponse {
+  bool found = 1;
+  string user_id = 2;
+  string iin = 3;
+  string first_name = 4;
+  string last_name = 5;
+  string middle_name = 6;
+  string status = 7;
+}
+
+service HrService {
+  rpc GetEmployeeVitalStats (GetEmployeeVitalStatsRequest) returns (EmployeeVitalStatsResponse);
+  rpc GetVitalStats (GetVitalStatsRequest) returns (VitalStatsResponse);
+  rpc GetProfileByIin (GetProfileByIinRequest) returns (ProfileByIinResponse);
+  rpc CreateEmployee (CreateEmployeeRequest) returns (CreateEmployeeResponse);
+  rpc GetProfilesByUserIds (GetProfilesByUserIdsRequest) returns (GetProfilesByUserIdsResponse);
+}
+
+message CreateEmployeeRequest {
+  string user_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string middle_name = 4;
+  string iin = 5;
+  google.protobuf.Timestamp birth_date = 6;
+  google.protobuf.Timestamp hire_date = 7;
+  string organization_node_id = 8;
+  string division_node_id = 9;
+  string department_node_id = 10;
+  string position_node_id = 11;
+  map<string, string> custom_fields = 12;
+}
+
+message CreateEmployeeResponse {
+  string employee_id = 1;
+}
+
+// Batch profile retrieval for Organization service
+message GetProfilesByUserIdsRequest {
+  repeated string user_ids = 1;
+}
+
+message HrUserProfile {
+  string user_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string middle_name = 4;
+  string avatar_id = 5;
+  string status = 6;
+}
+
+message GetProfilesByUserIdsResponse {
+  map<string, HrUserProfile> profiles = 1;
+}

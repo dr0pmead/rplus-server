@@ -1,0 +1,27 @@
+﻿// Decompiled with JetBrains decompiler
+// Type: RPlus.SDK.Core.Abstractions.IPluginContext
+// Assembly: RPlus.SDK.Core, Version=1.0.53.0, Culture=neutral, PublicKeyToken=null
+// MVID: C7BF4574-BF4E-421C-9B89-0A828A452EA1
+// Assembly location: F:\RPlus Framework\Recovery\loyalty\RPlus.SDK.Core.dll
+
+#nullable enable
+namespace RPlus.SDK.Core.Abstractions;
+
+public interface IPluginContext
+{
+  string PluginId { get; }
+
+  string Version { get; }
+
+  string KernelVersion { get; }
+
+  bool HasPermission(string permission);
+
+  void RegisterService<TService, TImplementation>()
+    where TService : class
+    where TImplementation : class, TService;
+
+  void RegisterSingleton<TService, TImplementation>()
+    where TService : class
+    where TImplementation : class, TService;
+}

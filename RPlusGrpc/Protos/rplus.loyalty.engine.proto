@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+package rplus.loyalty.engine.v1;
+
+option go_package = "rplus/loyalty/engine/v1;enginev1";
+option csharp_namespace = "RPlusGrpc.Loyalty.Engine.V1";
+option java_multiple_files = true;
+option java_package = "com.rplus.loyalty.engine.v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+service LoyaltyEngineServiceV1 {
+  // Primary entry point for event evaluation
+  rpc Evaluate(EvaluateRequest) returns (EvaluateResponse);
+
+  // Dry-run for tests and simulations
+  rpc Simulate(EvaluateRequest) returns (EvaluateResponse);
+
+  // Get user state as seen by the engine
+  rpc GetUserState(GetUserStateRequest) returns (UserState);
+
+  // Force recalculation (e.g. after rule migrations)
+  rpc Recalculate(RecalculateRequest) returns (RecalculateResponse);
+}
+
+/* ===================== REQUESTS ===================== */
+
+message EvaluateRequest {
+  string request_id = 1;
+  string user_id = 2;
+
+  // Event type: partner_scan, transaction_complete, feedback_created, etc.
+  string event_type = 3;
+
+  // Event payload
+  google.protobuf.Struct event_payload = 4;
+
+  // Call context (partnerId, deviceId, sourceService, etc)
+  EngineContext context = 5;
+
+  // Event time, defaults to now()
+  google.protobuf.Timestamp event_time = 6;
+}
+
+message GetUserStateRequest {
+  string user_id = 1;
+}
+
+message RecalculateRequest {
+  string request_id = 1;
+  string user_id = 2;
+
+  // If empty, recalculates everything
+  repeated string scopes = 3;
+}
+
+/* ===================== RESPONSES ===================== */
+
+message EvaluateResponse {
+  string request_id = 1;
+  string user_id = 2;
+
+  EngineResult result = 3;
+  repeated EngineEffect effects = 4;
+
+  EngineAudit audit = 5;
+}
+
+message RecalculateResponse {
+  string request_id = 1;
+  string user_id = 2;
+
+  repeated EngineEffect effects = 3;
+}
+
+/* ===================== CORE MODELS ===================== */
+
+message EngineContext {
+  string partner_id = 1;
+  string device_id = 2;
+  string source_service = 3;
+
+  map<string, string> tags = 10;
+}
+
+message EngineResult {
+  bool matched = 1;
+  repeated string matched_rule_ids = 2;
+}
+
+message EngineEffect {
+  string effect_id = 1;
+  EffectType type = 2;
+
+  // Effect payload
+  google.protobuf.Struct payload = 3;
+}
+
+enum EffectType {
+  EFFECT_TYPE_UNSPECIFIED = 0;
+  POINTS_ACCRUAL = 1;
+  LEVEL_CHANGE = 2;
+  DISCOUNT_APPLY = 3;
+  SYSTEM_ACTION = 10;
+}
+
+/* ===================== STATE ===================== */
+
+message UserState {
+  string user_id = 1;
+
+  int64 points_available = 2;
+  int64 points_pending = 3;
+
+  string level = 4;
+
+  map<string, google.protobuf.Struct> attributes = 10;
+
+  google.protobuf.Timestamp updated_at = 20;
+}
+
+/* ===================== AUDIT ===================== */
+
+message EngineAudit {
+  repeated RuleAudit rules = 1;
+  google.protobuf.Timestamp evaluated_at = 2;
+}
+
+message RuleAudit {
+  string rule_id = 1;
+  bool matched = 2;
+
+  repeated ConditionAudit conditions = 3;
+  repeated ActionAudit actions = 4;
+}
+
+message ConditionAudit {
+  string condition_id = 1;
+  bool result = 2;
+}
+
+message ActionAudit {
+  string action_id = 1;
+  EffectType effect_type = 2;
+}

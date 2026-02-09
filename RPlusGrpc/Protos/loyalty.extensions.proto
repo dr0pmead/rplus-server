@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package rplus.loyalty.extensions;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "rplus/loyalty/extensions;extensions";
+option csharp_namespace = "RPlusGrpc.Loyalty.Extensions";
+option java_multiple_files = true;
+option java_package = "com.rplus.loyalty.extensions";
+option java_outer_classname = "LoyaltyExtensionsProto";
+
+// =======================================================
+// Extension Registry Service
+// =======================================================
+
+service ExtensionRegistryService {
+  // Create new extension (condition / action / template)
+  rpc CreateExtension(CreateExtensionRequest) returns (CreateExtensionResponse);
+
+  // Update existing extension (new version)
+  rpc UpdateExtension(UpdateExtensionRequest) returns (UpdateExtensionResponse);
+
+  // Validate extension without publishing
+  rpc ValidateExtension(ValidateExtensionRequest) returns (ValidateExtensionResponse);
+
+  // Simulate extension execution
+  rpc SimulateExtension(SimulateExtensionRequest) returns (SimulateExtensionResponse);
+
+  // Publish extension (activate version)
+  rpc PublishExtension(PublishExtensionRequest) returns (PublishExtensionResponse);
+
+  // Get single extension
+  rpc GetExtension(GetExtensionRequest) returns (GetExtensionResponse);
+
+  // List extensions
+  rpc ListExtensions(ListExtensionsRequest) returns (ListExtensionsResponse);
+
+  // Get schema for UI / AI
+  rpc GetExtensionSchema(GetExtensionSchemaRequest) returns (GetExtensionSchemaResponse);
+}
+
+// =======================================================
+// Core Models
+// =======================================================
+
+enum ExtensionType {
+  EXTENSION_TYPE_UNSPECIFIED = 0;
+  CONDITION = 1;
+  ACTION = 2;
+  TEMPLATE = 3;
+}
+
+enum ExtensionStatus {
+  STATUS_UNSPECIFIED = 0;
+  DRAFT = 1;
+  ACTIVE = 2;
+  DEPRECATED = 3;
+}
+
+message ExtensionDescriptor {
+  string id = 1;
+  string type = 2; // unique type key, e.g. "user.tenure", "points.accrual.custom"
+  ExtensionType extension_type = 3;
+
+  string name = 4;
+  string description = 5;
+
+  int32 version = 6;
+  ExtensionStatus status = 7;
+
+  google.protobuf.Struct input_schema = 8;        // parameters schema
+  google.protobuf.Struct constraints = 9;          // limits, guards
+  google.protobuf.Struct implementation = 10;      // expression / template DSL
+
+  repeated string permissions_required = 11;       // e.g. loyalty.execute, points.emit
+
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+  string created_by = 14;
+}
+
+// =======================================================
+// Requests / Responses
+// =======================================================
+
+message CreateExtensionRequest {
+  ExtensionDescriptor extension = 1;
+  string correlation_id = 2;
+  string actor_id = 3;
+}
+
+message CreateExtensionResponse {
+  bool success = 1;
+  string extension_id = 2;
+  string error_message = 3;
+}
+
+message UpdateExtensionRequest {
+  ExtensionDescriptor extension = 1;
+  string correlation_id = 2;
+  string actor_id = 3;
+}
+
+message UpdateExtensionResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message ValidateExtensionRequest {
+  string extension_id = 1;
+  int32 version = 2;
+}
+
+message ValidateExtensionResponse {
+  bool valid = 1;
+  repeated string errors = 2;
+  google.protobuf.Struct validation_report = 3;
+}
+
+message SimulateExtensionRequest {
+  string extension_id = 1;
+  int32 version = 2;
+  google.protobuf.Struct context = 3;
+}
+
+message SimulateExtensionResponse {
+  bool success = 1;
+  google.protobuf.Struct result = 2;
+  repeated string warnings = 3;
+  string error_message = 4;
+}
+
+message PublishExtensionRequest {
+  string extension_id = 1;
+  int32 version = 2;
+  string actor_id = 3;
+}
+
+message PublishExtensionResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message GetExtensionRequest {
+  string extension_id = 1;
+  int32 version = 2; // optional, 0 = active
+}
+
+message GetExtensionResponse {
+  ExtensionDescriptor extension = 1;
+}
+
+message ListExtensionsRequest {
+  ExtensionType extension_type = 1;
+  ExtensionStatus status = 2;
+}
+
+message ListExtensionsResponse {
+  repeated ExtensionDescriptor extensions = 1;
+}
+
+message GetExtensionSchemaRequest {
+  ExtensionType extension_type = 1;
+}
+
+message GetExtensionSchemaResponse {
+  google.protobuf.Struct schema = 1;
+}

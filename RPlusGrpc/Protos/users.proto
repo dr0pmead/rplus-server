@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package rplus.users;
+
+option go_package = "rplus/users;users";
+option csharp_namespace = "RPlusGrpc.Users";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message ListUsersRequest {
+  int32 page_number = 1;
+  int32 page_size = 2;
+  string search_term = 3;
+}
+
+message ListUsersResponse {
+  repeated UserProfile users = 1;
+  int32 total_count = 2;
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message GetProfileWithMetaRequest {
+  string user_id = 1;
+  repeated string meta_keys = 2;
+}
+
+message UserProfileWithMeta {
+  UserProfile profile = 1;
+  map<string, string> meta_json = 2;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  optional string middle_name = 4;
+  optional string preferred_name = 5;
+  optional string locale = 6;
+  optional string time_zone = 7;
+  optional string avatar_id = 8;
+}
+
+message GetUsersByIdsRequest {
+  repeated string user_ids = 1;
+}
+
+message UsersList {
+  repeated UserProfile users = 1;
+}
+
+message UserProfile {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string middle_name = 4;
+  string preferred_name = 5;
+  string locale = 6;
+  string time_zone = 7;
+  string avatar_id = 8;
+  string status = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+service UsersService {
+  rpc GetProfile (GetProfileRequest) returns (UserProfile);
+  rpc GetProfileWithMeta (GetProfileWithMetaRequest) returns (UserProfileWithMeta);
+  rpc UpdateProfile (UpdateProfileRequest) returns (UserProfile);
+  rpc GetUsersByIds (GetUsersByIdsRequest) returns (UsersList);
+  rpc ListUsers (ListUsersRequest) returns (ListUsersResponse);
+}
